@@ -44,7 +44,11 @@ class OrdersController extends Controller
             'notes' => $request->notes ?? null,
             'status' => 'pending',
             'cost_price' => $cart_items->pluck('price')->sum(),
-            'restaurant_table_number' => $request->table_number
+            'restaurant_table_number' => $request->table_number,
+            'client_name' => $request->client_name,
+            'client_location' => $request->client_location,
+            'client_location_landmark' => $request->client_location_landmark,
+            'client_phone' => $request->client_phone,
         ]);
 
         $cart_items->each(function (CartItems $cart_item) use ($order) {
