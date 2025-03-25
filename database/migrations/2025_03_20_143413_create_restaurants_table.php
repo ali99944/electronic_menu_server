@@ -14,8 +14,11 @@ return new class extends Migration
         Schema::create('restaurants', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('description');
             $table->string('image');
             $table->string('logo');
+            $table->enum('currency', ['egp', 'dollar', 'euro'])->default('egp');
+            $table->enum('currency_icon', ['$', '£', '€'])->default('£');
             $table->timestamps();
         });
     }

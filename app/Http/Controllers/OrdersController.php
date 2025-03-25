@@ -6,6 +6,7 @@ use App\Events\OrderCreatedEvent;
 use App\Models\CartItems;
 use App\Models\OrderItem;
 use App\Models\Orders;
+use App\Models\Restaurants;
 use App\Models\RestaurantTables;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -20,6 +21,7 @@ class OrdersController extends Controller
             'data' => $orders
         ]);
     }
+
 
     public function store(Request $request)
     {
@@ -37,13 +39,12 @@ class OrdersController extends Controller
             ], 500);
         }
 
-        $restaurant_table = RestaurantTables::where('table_number', $request->table_number)->first();
 
         $order = Orders::create([
             'notes' => $request->notes ?? null,
             'status' => 'pending',
             'cost_price' => $cart_items->pluck('price')->sum(),
-            'restaurant_tables_id' => $restaurant_table->id
+            'restaurant_table_number' => $request->table_number
         ]);
 
         $cart_items->each(function (CartItems $cart_item) use ($order) {

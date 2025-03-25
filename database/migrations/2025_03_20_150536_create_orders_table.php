@@ -17,8 +17,9 @@ return new class extends Migration
             $table->id();
             $table->double('cost_price');
             $table->enum('status', ['pending', 'completed', 'rejected', 'in-progress'])->default('pending');
-            $table->foreignIdFor(RestaurantTables::class);
+            $table->string('restaurant_table_number');
             $table->string('notes')->nullable();
+            $table->enum('order_type', ['normal', 'meal'])->default('normal');
 
             // $table->foreignIdFor(Restaurants::class);
             $table->timestamps();

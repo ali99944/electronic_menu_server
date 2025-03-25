@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\RestaurantPortals;
+
 return [
 
     /*
@@ -14,8 +16,8 @@ return [
     */
 
     'defaults' => [
-        'guard' => env('AUTH_GUARD', 'web'),
-        'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
+        'guard' => env('AUTH_GUARD', 'restaurant_portal'),
+        'passwords' => env('AUTH_PASSWORD_BROKER', 'restaurant_portals'),
     ],
 
     /*
@@ -40,6 +42,11 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        'restaurant_portal' => [
+            'driver' => 'session',
+            'provider' => 'restaurant_portals'
+        ]
     ],
 
     /*
@@ -63,6 +70,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\User::class),
+        ],
+
+        'restaurant_portals' => [
+            'driver' => 'eloquent',
+            'model' => env('AUTH_RESTAURANT_MODEL', RestaurantPortals::class),
         ],
 
         // 'users' => [
@@ -97,6 +109,13 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
+
+        'restaurant_portals' => [
+            'provider' => 'restaurant_portals',
+            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ]
     ],
 
     /*

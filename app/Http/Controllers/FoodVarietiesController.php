@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\FoodVarieties;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class FoodVarietiesController extends Controller
 {
-    public function index()
+    public function index($restaurant_id)
     {
-        $food_varities = FoodVarieties::all();
+        $food_varities = FoodVarieties::where('restaurants_id', $restaurant_id)->get();
 
         return response()->json([
             'data' => $food_varities
@@ -20,16 +21,21 @@ class FoodVarietiesController extends Controller
     public function store(Request $request)
     {
         $validation = Validator::make($request->all(), [
-
+            'name' => 'required',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp,avif|max:2048'
         ]);
 
         $image = $request->file('image');
         $imageName = time() . '.' . $image->extension();
         $image->move(public_path('images/varieties'), $imageName);
 
+        $portal = Auth::user();
+
+
         $varient = FoodVarieties::create([
             'name' => $request->name,
-            'image' => 'images/varieties/' . $imageName
+            'image' => "images/varieties/{$imageName}",
+            'restaurants_id' => $portal->restaurants_id
         ]);
 
         return response()->json([
@@ -39,7 +45,22 @@ class FoodVarietiesController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        FoodVarieties::where('id', $id)->delete();
+        $portal = Auth::user();
+        $variety = FoodVarieties::find($id);
+
+        if (!$variety) {
+            return response()->json([
+                'error' => 'Food variety not found'
+            ], 404);
+        }
+
+        if ($variety->restaurants_id !== $portal->restaurants_id) {
+            return response()->json([
+                'error' => 'Unauthorized action'
+            ], 403);
+        }
+
+        $variety->delete();
 
         return response()->json([
             'status' => true
@@ -50,11 +71,18 @@ class FoodVarietiesController extends Controller
     {
         // Find the food variety by ID
         $variety = FoodVarieties::find($id);
+        $portal = Auth::user();
 
         if (!$variety) {
             return response()->json([
                 'error' => 'Food variety not found'
             ], 404);
+        }
+
+        if ($variety->restaurants_id !== $portal->restaurants_id) {
+            return response()->json([
+                'error' => 'Unauthorized action'
+            ], 403);
         }
 
         // Validate the incoming request data

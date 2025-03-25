@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('food_varieties', function (Blueprint $table) {
             $table->id();
-            // $table->foreignIdFor(Restaurants::class);
+            $table->foreignIdFor(Restaurants::class);
             $table->string('name');
             $table->string('image');
             $table->integer('total_dishes')->default(0);

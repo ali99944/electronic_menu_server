@@ -21,16 +21,21 @@ class CartItemsController extends Controller
 
     public function store(Request $request)
     {
-        $validation = Validator::make($request->all(), [
+        $cartItem = CartItems::where('session_code', $request->header('session_code'))
+            ->where('food_dishes_id', $request->food_dishes_id)
+            ->where('session_code', $request->header('session_code'))
+            ->first();
 
-        ]);
-
-
-        $cartItem = CartItems::create([
-            'quantity' => 1,
-            'session_code' => $request->header('session_code'),
-            'food_dishes_id' => $request->food_dishes_id
-        ]);
+        if ($cartItem) {
+            $cartItem->quantity = $cartItem->quantity + 1;
+            $cartItem->save();
+        } else {
+            $cartItem = CartItems::create([
+                'quantity' => 1,
+                'session_code' => $request->header('session_code'),
+                'food_dishes_id' => $request->food_dishes_id
+            ]);
+        }
 
         return response()->json([
             'data' => $cartItem

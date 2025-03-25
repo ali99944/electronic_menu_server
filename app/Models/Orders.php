@@ -10,7 +10,7 @@ class Orders extends Model
         'cost_price',
         'notes',
         'status',
-        'restaurant_tables_id'
+        'restaurant_table_number'
     ];
 
     public function order_items()

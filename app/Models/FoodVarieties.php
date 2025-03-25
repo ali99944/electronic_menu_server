@@ -9,6 +9,7 @@ class FoodVarieties extends Model
     protected $fillable = [
         'name',
         'image',
+        'restaurants_id'
     ];
 
     public function dishes()

@@ -3,14 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\FoodDishes;
+use App\Models\FoodVarieties;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class FoodDishesController extends Controller
 {
-    public function index()
+    public function index($id)
     {
-        $food_dishes = FoodDishes::with('variety')->get();
+        $food_dishes = FoodDishes::with('variety')->where('restaurants_id', $id)->get();
 
         return response()->json([
             'data' => $food_dishes
@@ -36,11 +37,15 @@ class FoodDishesController extends Controller
         $imageName = time() . '.' . $image->extension();
         $image->move(public_path('images/dishes'), $imageName);
 
+        // $varient = FoodVarieties::find($request->food_varieties_id)->first();
+
         $dish = FoodDishes::create([
             'name' => $request->name,
+            'description' => $request->description,
             'price' => $request->price,
             'image' => 'images/dishes/' . $imageName,
-            'food_varieties_id' => $request->food_varieties_id
+            'food_varieties_id' => $request->food_varieties_id,
+            'restaurants_id' => $request->restaurant_id
         ]);
 
         return response()->json([

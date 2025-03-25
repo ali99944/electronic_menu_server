@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\FoodVarieties;
+use App\Models\Restaurants;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -15,7 +16,9 @@ return new class extends Migration
         Schema::create('food_dishes', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(FoodVarieties::class);
+            $table->foreignIdFor(Restaurants::class);
             $table->string('name');
+            $table->string('description');
             $table->string('price');
             $table->string('image');
             $table->timestamps();
