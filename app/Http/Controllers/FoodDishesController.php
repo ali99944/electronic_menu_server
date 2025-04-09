@@ -30,12 +30,25 @@ class FoodDishesController extends Controller
     public function store(Request $request)
     {
         $validation = Validator::make($request->all(), [
-
+            'name' => 'required',
+            'description' => 'required',
+            'price' => 'required',
+            'food_varieties_id' => 'required',
+            'restaurant_id' => 'required'
         ]);
 
+        if ($validation->fails()) {
+            return response()->json([
+                'message' => $validation->errors()
+            ]);
+        }
+
         $image = $request->file('image');
-        $imageName = time() . '.' . $image->extension();
-        $image->move(public_path('images/dishes'), $imageName);
+
+        if ($image) {
+            $imageName = time() . '.' . $image->extension();
+            $image->move(public_path('images/dishes'), $imageName);
+        }
 
         // $varient = FoodVarieties::find($request->food_varieties_id)->first();
 
@@ -43,7 +56,7 @@ class FoodDishesController extends Controller
             'name' => $request->name,
             'description' => $request->description,
             'price' => $request->price,
-            'image' => 'images/dishes/' . $imageName,
+            'image' => $image ? "images/dishes/$imageName" : null,
             'food_varieties_id' => $request->food_varieties_id,
             'restaurants_id' => $request->restaurant_id
         ]);
