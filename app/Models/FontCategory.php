@@ -9,6 +9,7 @@ class FontCategory extends Model
     protected $table = 'font_categories';
 
     protected $fillable = [
+        'id',
         'name',
         'description',
         'total_fonts'

@@ -30,6 +30,11 @@ class RestaurantController extends Controller
     public function store(Request $request)
     {
         $validation = Validator::make($request->all(), [
+            'name' => 'required',
+            'description' => 'required',
+            'code' => 'required',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp,avif|max:2048',
+            'logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp,avif|max:2048',
         ]);
 
         if ($validation->fails()) {
@@ -50,7 +55,13 @@ class RestaurantController extends Controller
             'name' => $request->name,
             'description' => $request->description,
             'image' => "images/restaurants/images/{$imageName}",
-            'logo' => "images/restaurants/logos/{$logoName}"
+            'logo' => "images/restaurants/logos/{$logoName}",
+            'code' => $request->code,
+            'currency' => $request->currency ?? 'egp',
+            'currency_icon' => $request->currency_icon ?? '£',
+            'phone' => $request->phone,
+            'whatsapp' => $request->whatsapp,
+            'email' => $request->email
         ]);
 
         $settings = RestaurantSetting::create([

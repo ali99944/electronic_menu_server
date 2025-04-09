@@ -9,10 +9,18 @@ class Restaurants extends Model
     protected $table = 'restaurants';
 
     protected $fillable = [
+        'id',
+        'code',
         'name',
         'description',
         'image',
-        'logo'
+        'logo',
+
+        'currency',
+        'currency_icon',
+        'phone',
+        'whatsapp',
+        'email',
     ];
 
     public function settings()

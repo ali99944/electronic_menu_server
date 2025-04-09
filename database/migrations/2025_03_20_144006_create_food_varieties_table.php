@@ -16,7 +16,6 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Restaurants::class);
             $table->string('name');
-            $table->string('image');
             $table->integer('total_dishes')->default(0);
             $table->timestamps();
         });

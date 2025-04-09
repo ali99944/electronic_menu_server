@@ -14,11 +14,15 @@ return new class extends Migration
         Schema::create('restaurants', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('code')->unique();
             $table->string('description');
             $table->string('image');
             $table->string('logo');
-            $table->enum('currency', ['egp', 'dollar', 'euro'])->default('egp');
-            $table->enum('currency_icon', ['$', '£', '€'])->default('£');
+            $table->enum('currency', ['egp', 'dollar', 'euro', 'jod'])->default('egp');
+            $table->enum('currency_icon', ['$', '£', '€', 'jod'])->default('£');
+            $table->string('phone')->nullable();
+            $table->string('whatsapp')->nullable();
+            $table->string('email')->nullable();
             $table->timestamps();
         });
     }
