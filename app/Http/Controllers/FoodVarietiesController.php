@@ -22,19 +22,14 @@ class FoodVarietiesController extends Controller
     {
         $validation = Validator::make($request->all(), [
             'name' => 'required',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp,avif|max:2048'
         ]);
 
-        $image = $request->file('image');
-        $imageName = time() . '.' . $image->extension();
-        $image->move(public_path('images/varieties'), $imageName);
 
         $portal = Auth::user();
 
 
         $varient = FoodVarieties::create([
             'name' => $request->name,
-            'image' => "images/varieties/{$imageName}",
             'restaurants_id' => $portal->restaurants_id
         ]);
 
