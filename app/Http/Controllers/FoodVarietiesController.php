@@ -41,6 +41,7 @@ class FoodVarietiesController extends Controller
     public function destroy(Request $request, $id)
     {
         $portal = Auth::user();
+        
         $variety = FoodVarieties::find($id);
 
         if (!$variety) {
