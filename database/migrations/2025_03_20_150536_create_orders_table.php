@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->double('cost_price');
             $table->enum('status', ['pending', 'completed', 'rejected', 'in-progress'])->default('pending');
-            $table->string('restaurant_table_number');
+            $table->string('restaurant_table_number')->nullable();
             $table->string('notes')->nullable();
             $table->string('client_name');
             $table->string('client_location');
