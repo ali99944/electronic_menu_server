@@ -106,4 +106,13 @@ class OrdersController extends Controller
             'data' => $order
         ]);
     }
+
+    public function destroy(Request $request, $id)
+    {
+        Orders::where('id', $id)->delete();
+
+        return response()->json([
+            'status' => true
+        ]);
+    }
 }

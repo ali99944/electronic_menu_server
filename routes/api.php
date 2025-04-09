@@ -45,6 +45,8 @@ Route::prefix('orders')->group(function() {
     Route::get('/', [OrdersController::class, 'index']);
     Route::post('/', [OrdersController::class, 'store']);
     Route::put('/{id}/status', [OrdersController::class, 'updateStatus']);
+
+    Route::delete('/{id}', [OrdersController::class, 'destroy']);
 });
 
 Route::prefix('restaurants')->group(function() {
