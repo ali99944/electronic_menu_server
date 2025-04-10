@@ -15,7 +15,7 @@ class OrdersController extends Controller
 {
     public function index()
     {
-        $orders = Orders::with('order_items', 'restaurant_table')->orderByDesc('created_at')->get();
+        $orders = Orders::with('order_items')->orderByDesc('created_at')->get();
 
         return response()->json([
             'data' => $orders
@@ -24,14 +24,14 @@ class OrdersController extends Controller
 
     public function get_one(Request $request, $id)
     {
-        $order = Orders::where('id', $id)->with('order_items', 'restaurant_table')->first();
+        $order = Orders::where('id', $id)->with('order_items')->first();
 
         return response()->json($order);
     }
 
     public function get_client_orders(Request $request, $phone)
     {
-        $orders = Orders::where('client_phone', $phone)->with('order_items', 'restaurant_table')->orderByDesc('created_at')->get();
+        $orders = Orders::where('client_phone', $phone)->with('order_items')->orderByDesc('created_at')->get();
 
         return response()->json($orders);
     }
