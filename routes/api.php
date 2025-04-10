@@ -44,7 +44,7 @@ Route::prefix('cart-items')->group(function() {
 });
 
 Route::prefix('orders')->group(function() {
-    Route::get('/', [OrdersController::class, 'index']);
+    Route::get('/', [OrdersController::class, 'index'])->middleware('auth:sanctum,restaurant_portal');
     Route::get('/client/{phone}', [OrdersController::class, 'get_client_orders']);
     Route::get('/{id}', [OrdersController::class, 'get_one']);
     Route::post('/', [OrdersController::class, 'store']);
