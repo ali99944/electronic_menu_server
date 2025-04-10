@@ -53,7 +53,7 @@ class RestaurantPortalsController extends Controller
         'username' => $request->username,
         'password' => $request->password
     ])) {
-        return response()->json('Invalid credentials', 401);
+        return response()->json('Invalid credentials', 400);
     }
 
     // Get the user directly from the guard
