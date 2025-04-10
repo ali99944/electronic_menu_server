@@ -9,13 +9,15 @@ use App\Models\Orders;
 use App\Models\Restaurants;
 use App\Models\RestaurantTables;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class OrdersController extends Controller
 {
     public function index()
     {
-        $orders = Orders::with('order_items')->orderByDesc('created_at')->get();
+        $restaurant = Auth::guard('restaurant_portal')->user();
+        $orders = Orders::where('restaurant_id', $restaurant->id)::with('order_items')->orderByDesc('created_at')->get();
 
         return response()->json([
             'data' => $orders
