@@ -21,7 +21,7 @@ class RestaurantPortalsController extends Controller
         if ($validation->fails()) {
             return response()->json([
                 'errors' => $validation->errors()
-            ]);
+            ], 500);
         }
 
         $portal = RestaurantPortals::create([
@@ -46,16 +46,14 @@ class RestaurantPortalsController extends Controller
     if ($validation->fails()) {
         return response()->json([
             'errors' => $validation->errors()
-        ]);
+        ], 500);
     }
 
     if (!Auth::guard('restaurant_portal')->attempt([
         'username' => $request->username,
         'password' => $request->password
     ])) {
-        return response()->json([
-            'errors' => 'Invalid credentials'
-        ]);
+        return response()->json('Invalid credentials', 401);
     }
 
     // Get the user directly from the guard
