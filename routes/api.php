@@ -45,8 +45,8 @@ Route::prefix('cart-items')->group(function() {
 
 Route::prefix('orders')->group(function() {
     Route::get('/', [OrdersController::class, 'index']);
-    Route::get('/client/{phone}', [OrdersController::class, 'index']);
-    Route::get('/{id}', [OrdersController::class, 'index']);
+    Route::get('/client/{phone}', [OrdersController::class, 'get_client_orders']);
+    Route::get('/{id}', [OrdersController::class, 'get_one']);
     Route::post('/', [OrdersController::class, 'store']);
     Route::put('/{id}/status', [OrdersController::class, 'updateStatus']);
 
