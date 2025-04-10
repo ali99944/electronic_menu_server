@@ -22,6 +22,20 @@ class OrdersController extends Controller
         ]);
     }
 
+    public function get_one(Request $request, $id)
+    {
+        $order = Orders::where('id', $id)->with('order_items', 'restaurant_table')->first();
+
+        return response()->json($order);
+    }
+
+    public function get_client_orders(Request $request, $phone)
+    {
+        $orders = Orders::where('client_phone', $phone)->with('order_items', 'restaurant_table')->orderByDesc('created_at')->get();
+
+        return response()->json($orders);
+    }
+
 
     public function store(Request $request)
     {

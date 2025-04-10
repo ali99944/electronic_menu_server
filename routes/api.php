@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\OrderCreatedEvent;
 use App\Http\Controllers\CartItemsController;
 use App\Http\Controllers\FontCategoryController;
 use App\Http\Controllers\FontController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\RestaurantMenuStyleController;
 use App\Http\Controllers\RestaurantPortalsController;
 use App\Http\Controllers\RestaurantSettingController;
 use App\Http\Controllers\RestaurantTablesController;
+use App\Models\Orders;
 use Illuminate\Support\Facades\Route;
 
 
@@ -43,6 +45,8 @@ Route::prefix('cart-items')->group(function() {
 
 Route::prefix('orders')->group(function() {
     Route::get('/', [OrdersController::class, 'index']);
+    Route::get('/client/{phone}', [OrdersController::class, 'index']);
+    Route::get('/{id}', [OrdersController::class, 'index']);
     Route::post('/', [OrdersController::class, 'store']);
     Route::put('/{id}/status', [OrdersController::class, 'updateStatus']);
 
@@ -78,4 +82,22 @@ Route::prefix('fonts')->group(function() {
 Route::prefix('restaurant-portals')->group(function() {
     Route::post('/', [RestaurantPortalsController::class, 'store']);
     Route::post('/login', [RestaurantPortalsController::class, 'login_portal']);
+});
+
+Route::get('/pusher/test', function () {
+    event(new OrderCreatedEvent(
+        Orders::create([
+            'notes' => 'لا يوجد',
+            'status' => 'pending',
+            'cost_price' => 0,
+            'restaurant_table_number' => 1,
+            'client_name' => 'لا يوجد',
+            'client_location' => 'لا يوجد',
+            'client_location_landmark' => 'لا يوجد',
+            'client_phone' => 'لا يوجد',
+            'order_type' => 'inside'
+        ])
+    ));
+
+    return 'done';
 });
