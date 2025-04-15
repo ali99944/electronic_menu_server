@@ -9,7 +9,9 @@ class CartItems extends Model
     protected $fillable = [
         'quantity',
         'session_code',
-        'food_dishes_id'
+        'food_dishes_id',
+        'selected_dish_variant_name',
+        'selected_dish_variant_value'
     ];
 
     public function dish()

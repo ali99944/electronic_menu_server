@@ -19,6 +19,8 @@ return new class extends Migration
             // $table->foreignIdFor(Carts::class);
             $table->integer('quantity');
             $table->string('session_code');
+            $table->string('selected_dish_variant_name');
+            $table->string('selected_dish_variant_value');
             $table->timestamps();
         });
     }

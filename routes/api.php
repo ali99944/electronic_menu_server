@@ -41,6 +41,8 @@ Route::prefix('cart-items')->group(function() {
     Route::get('/', [CartItemsController::class, 'index']);
     Route::post('/', [CartItemsController::class, 'store']);
     Route::put('/{id}', [CartItemsController::class, 'update']);
+    Route::delete('/clear', [CartItemsController::class, 'clearAllCartItems']);
+    Route::delete('/{id}', [CartItemsController::class, 'destroyCartItem']);
 });
 
 Route::prefix('orders')->group(function() {

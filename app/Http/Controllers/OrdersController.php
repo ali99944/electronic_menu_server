@@ -61,7 +61,7 @@ class OrdersController extends Controller
         $order = Orders::create([
             'notes' => $request->notes ?? null,
             'status' => 'pending',
-            'cost_price' => $cart_items->pluck('price')->sum(),
+            'cost_price' => $cart_items->sum(fn(CartItems $cart_item) => $cart_item->selected_dish_variant_value * $cart_item->quantity),
             'restaurant_table_number' => 1,
             'client_name' => $request->client_name ?? 'لا يوجد',
             'client_location' => $request->client_location ?? 'لا يوجد',
@@ -72,7 +72,7 @@ class OrdersController extends Controller
         $cart_items->each(function (CartItems $cart_item) use ($order) {
             OrderItem::create([
                 'name' => $cart_item->dish->name,
-                'price' => $cart_item->dish->price,
+                'price' => $cart_item->selected_dish_variant_value,
                 'image' => $cart_item->dish->image ?? '',
                 'quantity' => $cart_item->quantity,
                 'orders_id' => $order->id
