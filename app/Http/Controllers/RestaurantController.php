@@ -64,6 +64,7 @@ class RestaurantController extends Controller
             'email' => $request->email
         ]);
 
+
         $settings = RestaurantSetting::create([
             'restaurants_id' => $restaurant->id,
         ]);

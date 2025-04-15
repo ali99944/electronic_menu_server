@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\FoodDish; // Correct namespace if models are in App\Models
 use App\Models\DishVariation; // Import the new model
 use App\Models\FoodDishes;
+use App\Models\FoodVarieties;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB; // Import DB facade for transactions
 use Illuminate\Support\Facades\Log; // Optional: for logging errors
@@ -34,9 +35,11 @@ class FoodDishesController extends Controller
      */
     public function variety_dishes($variety_id) // Renamed for clarity, was varient_dishes
     {
+        $variety = FoodVarieties::find($variety_id);
         // Eager load variations
         $food_dishes = FoodDishes::with('variations', 'variety')
-            ->where('food_varieties_id', $variety_id) // Assuming column is food_varieties_id
+            ->where('food_varieties_id', $variety_id)
+            ->where('restaurants_id', $variety->restaurants_id)
             ->get(); // Use get(), not all()
 
         return response()->json([
