@@ -22,7 +22,7 @@ class FoodDishesController extends Controller
     {
         // Eager load variations
         $food_dishes = FoodDishes::with('variations', 'variety', 'restaurant')
-            // ->where('restaurants_id', $restaurants_id) // Assuming column is restaurants_id
+            ->where('restaurants_id', $restaurants_id) // Assuming column is restaurants_id
             ->get();
 
         return response()->json([
