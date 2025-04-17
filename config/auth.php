@@ -108,7 +108,7 @@ return [
 
         'restaurant_portals' => [
             'provider' => 'restaurant_portals',
-            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'table' => 'restaurant_portals',
             'expire' => 60,
             'throttle' => 60,
         ]
