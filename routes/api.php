@@ -1,10 +1,10 @@
 <?php
 
 use App\Events\OrderCreatedEvent;
-use App\Http\Controllers\Api\ChangelogPointController;
-use App\Http\Controllers\Api\ChangelogVersionController;
-use App\Http\Controllers\Api\FeatureCategoryController;
-use App\Http\Controllers\Api\FeatureController;
+use App\Http\Controllers\ChangelogPointController;
+use App\Http\Controllers\ChangelogVersionController;
+use App\Http\Controllers\FeatureCategoryController;
+use App\Http\Controllers\FeatureController;
 use App\Http\Controllers\CartItemsController;
 use App\Http\Controllers\FontCategoryController;
 use App\Http\Controllers\FontController;
