@@ -17,9 +17,7 @@ class OrdersController extends Controller
     public function index()
     {
         $portal = request()->user();
-        return response()->json([
-            'data' => $portal ?? 'none'
-        ]);
+
         $orders = Orders::with('order_items')
             ->where('restaurants_id', $portal->restaurants_id)
             ->orderByDesc('created_at')
