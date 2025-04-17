@@ -15,7 +15,8 @@ class Orders extends Model
         'client_location',
         'client_location_landmark',
         'client_phone',
-        'order_type'
+        'order_type',
+        'restaurants_id'
 
     ];
 
