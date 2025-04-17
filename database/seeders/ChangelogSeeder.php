@@ -6,7 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\ChangelogVersion;
 use App\Models\ChangelogPoint;
-use Illuminate\Support\Facades\DB; // Keep DB Facade
+use Illuminate\Support\Facades\DB;
 
 class ChangelogSeeder extends Seeder
 {
@@ -15,27 +15,15 @@ class ChangelogSeeder extends Seeder
      */
     public function run(): void
     {
-        // --- PostgreSQL: Disable Triggers for Truncate ---
-        $pointTable = (new ChangelogPoint)->getTable();
-        $versionTable = (new ChangelogVersion)->getTable();
-
-        DB::statement("ALTER TABLE \"{$pointTable}\" DISABLE TRIGGER ALL;");
-        DB::statement("ALTER TABLE \"{$versionTable}\" DISABLE TRIGGER ALL;");
-
-        // Truncate tables - Use RESTART IDENTITY if needed
+        // Clear existing data
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         ChangelogPoint::truncate();
         ChangelogVersion::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        // Re-enable triggers
-        DB::statement("ALTER TABLE \"{$pointTable}\" ENABLE TRIGGER ALL;");
-        DB::statement("ALTER TABLE \"{$versionTable}\" ENABLE TRIGGER ALL;");
-        // --- End PostgreSQL specific block ---
-
-
-        // --- Data Definition (Keep as is) ---
+        // --- Data Definition (Matches frontend example) ---
         $changelogData = [
-            // ... your changelog data ...
-             [
+            [
                 'version' => '1.1',
                 'release_date' => 'قادم قريباً',
                 'points' => [
@@ -64,7 +52,7 @@ class ChangelogSeeder extends Seeder
         // --- End Data Definition ---
 
 
-        // --- Seeding Logic (Keep as is) ---
+        // --- Seeding Logic ---
         foreach ($changelogData as $versionData) {
             // Create the version
             $version = ChangelogVersion::create([

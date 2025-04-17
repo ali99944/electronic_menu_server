@@ -6,7 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\FeatureCategory;
 use App\Models\Feature;
-use Illuminate\Support\Facades\DB; // Keep DB facade
+use Illuminate\Support\Facades\DB;
 
 class FeatureSeeder extends Seeder
 {
@@ -15,28 +15,15 @@ class FeatureSeeder extends Seeder
      */
     public function run(): void
     {
-        // --- PostgreSQL: Disable Triggers for Truncate ---
-        // Get table names correctly, especially if you use prefixes
-        $featureTable = (new Feature)->getTable();
-        $categoryTable = (new FeatureCategory)->getTable();
-
-        // Temporarily disable triggers (includes FK checks) for these tables
-        DB::statement("ALTER TABLE \"{$featureTable}\" DISABLE TRIGGER ALL;");
-        DB::statement("ALTER TABLE \"{$categoryTable}\" DISABLE TRIGGER ALL;");
-
-        // Truncate the tables - RESTART IDENTITY resets auto-increment counters
+        // Clear existing data to avoid duplicates if run multiple times
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;'); // Disable FK constraints temporarily
         Feature::truncate();
         FeatureCategory::truncate();
-
-        // Re-enable triggers
-        DB::statement("ALTER TABLE \"{$featureTable}\" ENABLE TRIGGER ALL;");
-        DB::statement("ALTER TABLE \"{$categoryTable}\" ENABLE TRIGGER ALL;");
-        // --- End PostgreSQL specific block ---
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;'); // Re-enable FK constraints
 
 
-        // --- Data Definition (Keep as is) ---
+        // --- Data Definition (Matches frontend example) ---
         $featureGroups = [
-            // ... your data definition here ...
             [
                 'title' => "إدارة القائمة (المنيو)",
                 'icon_name' => "ListChecks", // Use Lucide icon names
@@ -73,7 +60,7 @@ class FeatureSeeder extends Seeder
         // --- End Data Definition ---
 
 
-        // --- Seeding Logic (Keep as is) ---
+        // --- Seeding Logic ---
         foreach ($featureGroups as $groupData) {
             // Create the category
             $category = FeatureCategory::create([
@@ -91,3 +78,4 @@ class FeatureSeeder extends Seeder
         }
     }
 }
+
