@@ -27,7 +27,7 @@ class FoodVarietiesController extends Controller
         ]);
 
 
-        $portal = Auth::guard('restaurant_portal')->user();
+        $portal = request()->user();
 
 
         $varient = FoodVarieties::create([
@@ -42,7 +42,7 @@ class FoodVarietiesController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $portal = Auth::guard('restaurant_portal')->user();
+        $portal = request()->user();
 
         $variety = FoodVarieties::find($id);
 
@@ -69,7 +69,7 @@ class FoodVarietiesController extends Controller
     {
         // Find the food variety by ID
         $variety = FoodVarieties::find($id);
-        $portal = Auth::guard('restaurant_portal')->user();
+        $portal = request()->user();
 
         if (!$variety) {
             return response()->json([

@@ -94,16 +94,16 @@ class RestaurantController extends Controller
             'new_password' => 'required|confirmed',
         ]);
 
-        $user = Auth::guard('restaurant_portal')->user();
+        $portal = request()->user();
 
-        if (!Hash::check($request->old_password, $user->password)) {
+        if (!Hash::check($request->old_password, $portal->password)) {
             return response()->json([
                 'error' => 'Old password is incorrect'
             ], 401);
         }
 
-        $user->password = Hash::make($request->new_password);
-        $user->save();
+        $portal->password = Hash::make($request->new_password);
+        $portal->save();
 
         return response()->json([
             'message' => 'Password changed successfully'
