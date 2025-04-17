@@ -11,7 +11,9 @@ class FoodVarietiesController extends Controller
 {
     public function index($restaurant_id)
     {
-        $food_varities = FoodVarieties::where('restaurants_id', $restaurant_id)->get();
+        $food_varities = FoodVarieties::with('dishes')
+            ->where('restaurants_id', $restaurant_id)
+            ->get();
 
         return response()->json([
             'data' => $food_varities
@@ -25,7 +27,7 @@ class FoodVarietiesController extends Controller
         ]);
 
 
-        $portal = Auth::user();
+        $portal = Auth::guard('restaurant_portal')->user();
 
 
         $varient = FoodVarieties::create([
@@ -40,8 +42,8 @@ class FoodVarietiesController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $portal = Auth::user();
-        
+        $portal = Auth::guard('restaurant_portal')->user();
+
         $variety = FoodVarieties::find($id);
 
         if (!$variety) {
@@ -67,7 +69,7 @@ class FoodVarietiesController extends Controller
     {
         // Find the food variety by ID
         $variety = FoodVarieties::find($id);
-        $portal = Auth::user();
+        $portal = Auth::guard('restaurant_portal')->user();
 
         if (!$variety) {
             return response()->json([

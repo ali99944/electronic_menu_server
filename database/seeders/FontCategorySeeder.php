@@ -13,12 +13,15 @@ class FontCategorySeeder extends Seeder
      */
     public function run(): void
     {
-        FontCategory::truncate();
-        FontCategory::create([
-            'id' => 1,
-            'name' => 'Basic Fonts',
-            'description' => 'Basic Fonts',
-            'total_fonts' => 0
-        ]);
+        FontCategory::updateOrCreate(
+            [
+                'id' => 1,
+            ],
+            [
+                'name' => 'Basic Fonts',
+                'description' => 'Basic Fonts',
+                'total_fonts' => 0
+            ]
+        );
     }
 }

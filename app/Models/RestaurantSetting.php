@@ -14,6 +14,14 @@ class RestaurantSetting extends Model
     ];
 
 
+    protected $casts = [
+        'is_portal_active' => 'boolean',
+        'is_restaurant_active' => 'boolean',
+        'has_orders' => 'boolean',
+        'has_meals' => 'boolean',
+    ];
+
+
     public function restaurant()
     {
         return $this->belongsTo(Restaurants::class, 'restaurants_id');

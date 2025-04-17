@@ -6,6 +6,8 @@ use App\Models\RestaurantMenuStyle;
 use App\Models\Restaurants;
 use App\Models\RestaurantSetting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class RestaurantController extends Controller
@@ -84,5 +86,28 @@ class RestaurantController extends Controller
         ]);
     }
 
+
+    public function change_password(Request $request)
+    {
+        $request->validate([
+            'old_password' => 'required',
+            'new_password' => 'required|confirmed',
+        ]);
+
+        $user = Auth::guard('restaurant_portal')->user();
+
+        if (!Hash::check($request->old_password, $user->password)) {
+            return response()->json([
+                'error' => 'Old password is incorrect'
+            ], 401);
+        }
+
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return response()->json([
+            'message' => 'Password changed successfully'
+        ]);
+    }
 
 }

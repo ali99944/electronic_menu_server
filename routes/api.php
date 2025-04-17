@@ -1,6 +1,10 @@
 <?php
 
 use App\Events\OrderCreatedEvent;
+use App\Http\Controllers\Api\ChangelogPointController;
+use App\Http\Controllers\Api\ChangelogVersionController;
+use App\Http\Controllers\Api\FeatureCategoryController;
+use App\Http\Controllers\Api\FeatureController;
 use App\Http\Controllers\CartItemsController;
 use App\Http\Controllers\FontCategoryController;
 use App\Http\Controllers\FontController;
@@ -47,18 +51,19 @@ Route::prefix('cart-items')->group(function() {
 
 Route::prefix('orders')->group(function() {
     Route::get('/', [OrdersController::class, 'index'])->middleware('auth:sanctum,restaurant_portal');
-    Route::get('/client/{phone}', [OrdersController::class, 'get_client_orders']);
     Route::get('/{id}', [OrdersController::class, 'get_one']);
     Route::post('/', [OrdersController::class, 'store']);
-    Route::put('/{id}/status', [OrdersController::class, 'updateStatus']);
+    Route::put('/{id}/status', [OrdersController::class, 'updateStatus'])->middleware('auth:sanctum,restaurant_portal');
 
-    Route::delete('/{id}', [OrdersController::class, 'destroy']);
+    Route::delete('/{id}', [OrdersController::class, 'destroy'])->middleware('auth:sanctum,restaurant_portal');
+    Route::get('/client/{phone}', [OrdersController::class, 'get_client_orders']);
 });
 
 Route::prefix('restaurants')->group(function() {
     Route::get('/', [RestaurantController::class, 'index']);
     Route::get('/{id}', [RestaurantController::class, 'get_restaurant']);
     Route::post('/', [RestaurantController::class, 'store']);
+    Route::put('/change-password', [RestaurantController::class, 'change_password'])->middleware('auth:sanctum,restaurant_portal');
 
     Route::get('/{id}/settings', [RestaurantSettingController::class, 'settings']);
     Route::put('/{id}/settings', [RestaurantSettingController::class, 'update_settings']);
@@ -103,3 +108,11 @@ Route::get('/pusher/test', function () {
 
     return 'done';
 });
+
+
+
+Route::apiResource('changelog-versions', ChangelogVersionController::class);
+Route::apiResource('changelog-points', ChangelogPointController::class);
+
+Route::apiResource('feature-categories', FeatureCategoryController::class);
+Route::apiResource('features', FeatureController::class);

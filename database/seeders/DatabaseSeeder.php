@@ -16,7 +16,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             FontCategorySeeder::class,
             FontSeeder::class,
-            RestaurantSeeder::class
+            RestaurantSeeder::class,
+            FeatureSeeder::class,
+            ChangelogSeeder::class
         ]);
     }
 }

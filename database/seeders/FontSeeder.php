@@ -12,12 +12,13 @@ class FontSeeder extends Seeder
      */
     public function run(): void
     {
-        Font::truncate();
-        Font::create([
-            'name' => 'Alilato',
-            'link' => 'fonts/alfont_com_Alilato-ExtraLight.ttf',
-            'description' => 'Alilato',
-            'font_category_id' => 1
-        ]);
+        Font::updateOrCreate(
+            ['name' => 'Alilato'],
+            [
+                'link' => 'fonts/alfont_com_Alilato-ExtraLight.ttf',
+                'description' => 'Alilato',
+                'font_category_id' => 1
+            ]
+        );
     }
 }

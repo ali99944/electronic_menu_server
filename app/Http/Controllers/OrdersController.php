@@ -18,6 +18,7 @@ class OrdersController extends Controller
     {
         $portal = Auth::guard('restaurant_portal')->user();
         $orders = Orders::with('order_items')
+            ->where('restaurants_id', $portal->restaurants_id)
             ->orderByDesc('created_at')
             ->get();
 
