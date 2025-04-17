@@ -17,9 +17,7 @@ class OrdersController extends Controller
     public function index()
     {
         $portal = request()->user();
-        return response()->json([
-            'data' => $portal ?? []
-        ]);
+
         $orders = Orders::with('order_items')
             ->where('restaurants_id', $portal->restaurants_id)
             ->orderByDesc('created_at')
@@ -48,7 +46,7 @@ class OrdersController extends Controller
     public function store(Request $request)
     {
         $validation = Validator::make($request->all(), [
-
+            
         ]);
 
 
@@ -71,6 +69,7 @@ class OrdersController extends Controller
             'client_location' => $request->client_location ?? 'لا يوجد',
             'client_location_landmark' => $request->client_location_landmark ?? 'لا يوجد',
             'client_phone' => $request->client_phone ?? 'لا يوجد',
+            'restaurants_id' => $request->query('restaurants_id'),
         ]);
 
         $cart_items->each(function (CartItems $cart_item) use ($order) {

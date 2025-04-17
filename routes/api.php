@@ -1,6 +1,7 @@
 <?php
 
 use App\Events\OrderCreatedEvent;
+use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\ChangelogPointController;
 use App\Http\Controllers\ChangelogVersionController;
 use App\Http\Controllers\FeatureCategoryController;
@@ -116,3 +117,5 @@ Route::apiResource('changelog-points', ChangelogPointController::class);
 
 Route::apiResource('feature-categories', FeatureCategoryController::class);
 Route::apiResource('features', FeatureController::class);
+
+Route::get('/settings', [SettingsController::class, 'index'])->name('api.settings.index');
