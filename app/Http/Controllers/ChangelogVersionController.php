@@ -17,7 +17,7 @@ class ChangelogVersionController extends Controller
     public function index()
     {
         // Eager load points for efficiency, order by creation date descending
-        $versions = ChangelogVersion::with('points')->latest()->get();
+        $versions = ChangelogVersion::with('points')->get();
         return response()->json(['data' => $versions]);
     }
 
