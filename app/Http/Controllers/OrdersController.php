@@ -16,7 +16,7 @@ class OrdersController extends Controller
 {
     public function index()
     {
-        $portal = Auth::guard('restaurant_portal')->user();
+        $portal = request()->user();
         return response()->json([
             'data' => $portal ?? 'none'
         ]);
