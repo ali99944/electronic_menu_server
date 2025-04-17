@@ -1,7 +1,7 @@
 <?php
 
 use App\Events\OrderCreatedEvent;
-use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ChangelogPointController;
 use App\Http\Controllers\ChangelogVersionController;
 use App\Http\Controllers\FeatureCategoryController;
