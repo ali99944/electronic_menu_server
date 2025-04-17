@@ -21,7 +21,7 @@ class Orders extends Model
 
     public function order_items()
     {
-        return $this->hasMany(OrderItem::class);
+        return $this->hasMany(OrderItem::class, 'orders_id');
     }
 
     public function restaurant_table()
