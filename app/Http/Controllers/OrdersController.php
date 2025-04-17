@@ -18,7 +18,7 @@ class OrdersController extends Controller
     {
         $portal = Auth::guard('restaurant_portal')->user();
         return response()->json([
-            'data' => $portal
+            'data' => $portal->restaurants_id
         ]);
         $orders = Orders::with('order_items')
             ->where('restaurants_id', $portal->restaurants_id)
