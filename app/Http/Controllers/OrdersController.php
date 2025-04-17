@@ -20,7 +20,7 @@ class OrdersController extends Controller
 
         $orders = Orders::with('order_items')
             ->where('restaurants_id', $portal->restaurants_id)
-            ->orderByDesc('created_at')
+            // ->orderByDesc('created_at')
             ->get();
 
         return response()->json([
