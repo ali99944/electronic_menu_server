@@ -19,6 +19,7 @@ class RestaurantSetting extends Model
         'is_restaurant_active' => 'boolean',
         'has_orders' => 'boolean',
         'has_meals' => 'boolean',
+        'has_delivery' => 'boolean',
     ];
 
 

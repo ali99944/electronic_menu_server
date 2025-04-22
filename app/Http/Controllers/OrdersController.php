@@ -85,11 +85,11 @@ class OrdersController extends Controller
         CartItems::where('session_code', $request->header('session_code'))->truncate();
 
 
-        // event(new OrderCreatedEvent(
-        //     Orders::where('id', $order->id)
-        //         ->with('order_items', 'restaurant_table')
-        //         ->first()
-        // ));
+        event(new OrderCreatedEvent(
+            Orders::where('id', $order->id)
+                ->with('order_items')
+                ->first()
+        ));
 
         return response()->json([
             'data' => $order

@@ -123,4 +123,7 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+
+    'menu_base_url' => env('MENU_BASE_URL', 'http://localhost/menu'),
+
 ];

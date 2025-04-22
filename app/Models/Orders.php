@@ -24,9 +24,4 @@ class Orders extends Model
     {
         return $this->hasMany(OrderItem::class, 'orders_id');
     }
-
-    public function restaurant_table()
-    {
-        return $this->belongsTo(RestaurantTables::class, 'restaurant_tables_id');
-    }
 }

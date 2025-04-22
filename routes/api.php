@@ -1,6 +1,7 @@
 <?php
 
 use App\Events\OrderCreatedEvent;
+use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ChangelogPointController;
 use App\Http\Controllers\ChangelogVersionController;
@@ -37,7 +38,7 @@ Route::prefix('food-dishes')->group(function() {
 
 Route::prefix('restaurant-tables')->group(function() {
     Route::get('/', [RestaurantTablesController::class, 'index']);
-    Route::post('/', [RestaurantTablesController::class, 'store']);
+    Route::post('/', [RestaurantTablesController::class, 'store'])->middleware('auth:sanctum,restaurant_portal');
     Route::delete('/{id}', [RestaurantTablesController::class, 'destroy']);
     Route::put('/{id}/status', [RestaurantTablesController::class, 'updateStatus']);
 });
@@ -119,3 +120,5 @@ Route::apiResource('feature-categories', FeatureCategoryController::class);
 Route::apiResource('features', FeatureController::class);
 
 Route::get('/settings', [SettingsController::class, 'index'])->name('api.settings.index');
+
+Route::patch('/order-items/{id}/status', [OrderItemController::class, 'updateStatus']);
