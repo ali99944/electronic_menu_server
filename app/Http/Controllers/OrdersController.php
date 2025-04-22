@@ -106,7 +106,7 @@ class OrdersController extends Controller
     {
         // Validate the input status
         $validation = Validator::make($request->all(), [
-            'status' => 'required|in:pending,rejected,completed,in-progress'
+            'status' => 'required|in:pending,rejected,completed,in-progress,paid'
         ]);
 
         if ($validation->fails()) {
