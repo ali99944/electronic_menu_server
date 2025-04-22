@@ -12,6 +12,7 @@ class RestaurantSetting extends Model
         'has_orders',
         'has_meals',
         'has_delivery',
+        'restaurants_id',
     ];
 
 
