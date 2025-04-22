@@ -18,7 +18,6 @@ return new class extends Migration
             $table->boolean('is_portal_active')->default(false);
             $table->boolean('is_restaurant_active')->default(false);
             $table->boolean('has_orders')->default(false);
-            $table->boolean('has_delivery')->default(false);
             $table->boolean('has_meals')->default(false);
             $table->timestamps();
         });
