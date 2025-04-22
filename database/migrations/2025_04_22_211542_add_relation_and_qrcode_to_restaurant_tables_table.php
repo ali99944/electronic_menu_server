@@ -12,11 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('restaurant_tables', function (Blueprint $table) {
-            $table->id();
-            $table->integer("table_number")->unique();
-            $table->enum('status', ['reserved', 'busy', 'free'])->default('free');
-            $table->timestamps();
+        Schema::table('restaurant_tables', function (Blueprint $table) {
+            $table->foreignIdFor(Restaurants::class);
+            $table->string("qrcode");
         });
     }
 
@@ -25,6 +23,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('restaurant_tables');
+        Schema::table('restaurant_tables', function (Blueprint $table) {
+            $table->dropForeignIdFor(Restaurants::class);
+            $table->dropColumn('qrcode');
+        });
     }
 };
