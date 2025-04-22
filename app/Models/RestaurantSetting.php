@@ -10,7 +10,8 @@ class RestaurantSetting extends Model
         'is_portal_active',
         'is_restaurant_active',
         'has_orders',
-        'has_meals'
+        'has_meals',
+        'has_delivery',
     ];
 
 
