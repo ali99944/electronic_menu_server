@@ -68,18 +68,18 @@ class OrdersController extends Controller
             'notes' => $request->notes ?? null,
             'status' => 'pending',
             'cost_price' => $cart_items->sum(fn(CartItems $cart_item) => $cart_item->selected_dish_variant_value * $cart_item->quantity),
-            'restaurant_table_number' => $request->restaurant_table_number ?? 'لا يوجد',
-            'client_name' => $request->client_name ?? 'لا يوجد',
-            'client_location' => $request->client_location ?? 'لا يوجد',
-            'client_location_landmark' => $request->client_location_landmark ?? 'لا يوجد',
-            'client_phone' => $request->client_phone ?? 'لا يوجد',
+            'restaurant_table_number' => $request->restaurant_table_number,
+            'client_name' => $request->client_name,
+            'client_location' => $request->client_location,
+            'client_location_landmark' => $request->client_location_landmark,
+            'client_phone' => $request->client_phone,
             'restaurants_id' => $request->query('restaurants_id'),
             'order_type' => $restaurant_settings->has_delivery == true ? 'delivery' : 'inside'
         ]);
 
         $cart_items->each(function (CartItems $cart_item) use ($order) {
             OrderItem::create([
-                'name' => $cart_item->dish->name,
+                'name' => $cart_item->dish->name . ' - ' . $cart_item->selected_dish_variant_name,
                 'price' => $cart_item->selected_dish_variant_value,
                 'image' => $cart_item->dish->image,
                 'quantity' => $cart_item->quantity,
