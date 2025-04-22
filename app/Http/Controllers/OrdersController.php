@@ -62,7 +62,7 @@ class OrdersController extends Controller
             ], 500);
         }
 
-        $restaurant_settings = RestaurantSetting::where('restaurants_id', $request->query('restaurants_id'));
+        $restaurant_settings = RestaurantSetting::where('restaurants_id', $request->query('restaurants_id'))->first();
 
         $order = Orders::create([
             'notes' => $request->notes ?? null,
