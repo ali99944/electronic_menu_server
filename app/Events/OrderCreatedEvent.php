@@ -32,7 +32,7 @@ class OrderCreatedEvent implements ShouldBroadcastNow
      */
     public function broadcastOn(): array
     {
-        return ['orders-channel.1'];
+        return ['orders-channel'];
     }
 
     public function broadcastAs()
