@@ -85,8 +85,7 @@ class RestaurantTablesController extends Controller
 
         try {
             // 1. Define QR Code Data
-            $baseUrl = config('app.menu_base_url', url('/'));
-            $qrData = rtrim($baseUrl, '/') . '?table_number=' . $tableNumber . '&restaurants_id=' . $restaurantId;
+            $qrData = 'https://emenu.sourcemediaagency.com/restaurants/' . $restaurantId . '/emenu?table_number=' . $tableNumber;
 
             // 2. Configure QR Options
             $options = new QROptions([
