@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\FreeUpTableEvent;
 use App\Models\Restaurants; // Import Restaurants model
 use App\Models\RestaurantTables;
 use Illuminate\Http\Request;
@@ -304,6 +305,27 @@ class RestaurantTablesController extends Controller
         // Update the table status
         $table->status = $request->status;
         $table->save();
+
+        return response()->json([
+            'message' => 'Table status updated successfully.',
+            'data' => $table
+        ]);
+    }
+
+    public function makeTableFree(Request $request, $id)
+    {
+        $table = RestaurantTables::find($id);
+
+        if (!$table) {
+            return response()->json([
+                'message' => 'Table not found'
+            ], 404);
+        }
+
+        $table->status = 'free';
+        $table->save();
+
+        event(new FreeUpTableEvent($table->table_number));
 
         return response()->json([
             'message' => 'Table status updated successfully.',

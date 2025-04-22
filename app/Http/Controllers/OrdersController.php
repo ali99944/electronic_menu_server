@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\FreeUpTableEvent;
 use App\Events\OrderCreatedEvent;
+use App\Events\OrderStatusChanged;
 use App\Models\CartItems;
 use App\Models\OrderItem;
 use App\Models\Orders;
 use App\Models\Restaurants;
+use App\Models\RestaurantSetting;
 use App\Models\RestaurantTables;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -59,17 +62,19 @@ class OrdersController extends Controller
             ], 500);
         }
 
+        $restaurant_settings = RestaurantSetting::where('restaurants_id', $request->query('restaurants_id'));
 
         $order = Orders::create([
             'notes' => $request->notes ?? null,
             'status' => 'pending',
             'cost_price' => $cart_items->sum(fn(CartItems $cart_item) => $cart_item->selected_dish_variant_value * $cart_item->quantity),
-            'restaurant_table_number' => 1,
+            'restaurant_table_number' => $request->restaurant_table_number ?? 'لا يوجد',
             'client_name' => $request->client_name ?? 'لا يوجد',
             'client_location' => $request->client_location ?? 'لا يوجد',
             'client_location_landmark' => $request->client_location_landmark ?? 'لا يوجد',
             'client_phone' => $request->client_phone ?? 'لا يوجد',
             'restaurants_id' => $request->query('restaurants_id'),
+            'order_type' => $restaurant_settings->has_delivery == true ? 'delivery' : 'inside'
         ]);
 
         $cart_items->each(function (CartItems $cart_item) use ($order) {
@@ -122,6 +127,14 @@ class OrdersController extends Controller
         // Update the status of the order
         $order->status = $request->status;
         $order->save();
+
+        event(new OrderStatusChanged(
+            $order->client_phone
+        ));
+
+        if($request->status == 'paid') {
+            event(new FreeUpTableEvent($order->restaurant_table_number));
+        }
 
         return response()->json([
             'data' => $order

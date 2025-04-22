@@ -2,31 +2,23 @@
 
 namespace App\Events;
 
-use App\Models\Order; // Assuming you have an Order model
-use App\Models\Orders;
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast; // Keep for potential future WebSocket use
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Support\Arrayable; // Import Arrayable
 
-
-class NewOrderCreated implements ShouldBroadcastNow // Implement Arrayable for easy serialization
+class OrderStatusChanged implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public Orders $order;
+    public $phone_number;
 
     /**
      * Create a new event instance.
      */
-    public function __construct(Orders $order)
+    public function __construct($phone_number)
     {
-        $this->order = $order;
+        $this->phone_number = $phone_number;
     }
 
     /**
@@ -41,6 +33,6 @@ class NewOrderCreated implements ShouldBroadcastNow // Implement Arrayable for e
 
     public function broadcastAs()
     {
-        return 'order.created';
+        return 'order.updated';
     }
 }
