@@ -170,15 +170,12 @@ class FoodDishesController extends Controller
             }
 
             // --- Handle Image Update ---
-            $oldImagePath = $dish->image ? str_replace('storage/', 'public/', $dish->image) : null;
             if ($request->hasFile('image')) {
-                // Delete the old image if it exists
-                if ($oldImagePath && Storage::exists($oldImagePath)) {
-                    Storage::delete($oldImagePath);
-                }
-                // Store the new image
-                $imagePath = $request->file('image')->store('public/images/dishes');
-                $dish->image = str_replace('public/', 'storage/', $imagePath);
+                $image = $request->file('image');
+                $imageName = time() . '.' . $image->extension();
+                $image->move(public_path('images/dishes'), $imageName);
+
+                $dish->image = "images/dishes/$imageName";
                 $dish->save(); // Save image path update
             }
 
