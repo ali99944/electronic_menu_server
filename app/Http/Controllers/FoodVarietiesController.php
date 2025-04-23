@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\FoodDishes;
 use App\Models\FoodVarieties;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,6 +18,17 @@ class FoodVarietiesController extends Controller
 
         return response()->json([
             'data' => $food_varities
+        ]);
+    }
+
+    public function getFoodDishesByCategory (Request $request, $id)
+    {
+        $food_dishes = FoodDishes::with('variations')
+            ->where('food_varieties_id', $id)
+            ->get();
+
+        return response()->json([
+            'data' => $food_dishes
         ]);
     }
 
