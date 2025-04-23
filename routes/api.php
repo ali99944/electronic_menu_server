@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('food-varieties')->group(function() {
     Route::get('/restaurants/{id}', [FoodVarietiesController::class, 'index']);
     Route::get('/{id}/dishes', [FoodVarietiesController::class, 'getFoodDishesByCategory']);
+    Route::get('/{id}', [FoodVarietiesController::class, 'getFoodDishesByCategory']);
     Route::post('/', [FoodVarietiesController::class, 'store'])->middleware('auth:sanctum,restaurant_portal');
     Route::put('/{id}', [FoodVarietiesController::class, 'update'])->middleware('auth:sanctum,restaurant_portal');
     Route::delete('/{id}', [FoodVarietiesController::class, 'destroy'])->middleware('auth:sanctum,restaurant_portal');

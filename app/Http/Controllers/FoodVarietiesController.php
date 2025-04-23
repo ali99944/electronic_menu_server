@@ -21,6 +21,18 @@ class FoodVarietiesController extends Controller
         ]);
     }
 
+
+    public function getOne(Request $request, $id)
+    {
+        $food_varity = FoodVarieties::with('dishes')
+            ->where('id', $id)
+            ->first();
+
+        return response()->json([
+            'data' => $food_varity
+        ]);
+    }
+    
     public function getFoodDishesByCategory (Request $request, $id)
     {
         $food_dishes = FoodDishes::with('variations')
