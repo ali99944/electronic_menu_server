@@ -68,7 +68,7 @@ class OrdersController extends Controller
             'notes' => $request->notes ?? null,
             'status' => 'pending',
             'cost_price' => $cart_items->sum(fn(CartItems $cart_item) => $cart_item->selected_dish_variant_value * $cart_item->quantity),
-            'restaurant_table_number' => $request->restaurant_table_number,
+            'restaurant_table_number' => $request->restaurant_table_number ?? 0,
             'client_name' => $request->client_name,
             'client_location' => $request->client_location,
             'client_location_landmark' => $request->client_location_landmark,

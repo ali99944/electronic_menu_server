@@ -74,9 +74,9 @@ class FoodDishesController extends Controller
         $imagePath = null;
         if ($request->hasFile('image')) {
             // Use Storage facade for better flexibility
-            $imagePath = $request->file('image')->store('public/images/dishes');
-            // Clean up the path for DB storage if needed (remove 'public/')
-            $imagePath = str_replace('public/', 'storage/', $imagePath);
+            $image = $request->file('image');
+            $imageName = time() . '.' . $image->extension();
+            $image->move(public_path('images/dishes'), $imageName);
         }
 
         // Use a transaction to ensure data consistency
@@ -86,7 +86,7 @@ class FoodDishesController extends Controller
             $dish = FoodDishes::create([
                 'name' => $request->name,
                 'description' => $request->description,
-                'image' => $imagePath,
+                'image' => "images/dishes/$imageName",
                 'food_varieties_id' => $request->food_varieties_id,
                 'restaurants_id' => $request->restaurants_id // Use correct column name
             ]);
