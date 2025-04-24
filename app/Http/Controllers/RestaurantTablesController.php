@@ -331,4 +331,15 @@ class RestaurantTablesController extends Controller
             'data' => $table
         ]);
     }
+
+
+    public function get_restaurant_tables()
+    {
+        $restaurantId = request()->user()->restaurants_id;
+        $tables = RestaurantTables::where('restaurants_id', $restaurantId)->get();
+
+        return response()->json([
+            'data' => $tables
+        ]);
+    }
 }

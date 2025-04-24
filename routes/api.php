@@ -39,9 +39,10 @@ Route::prefix('food-dishes')->group(function() {
 });
 
 Route::prefix('restaurant-tables')->group(function() {
-    Route::get('/', [RestaurantTablesController::class, 'index']);
+    // Route::get('/', [RestaurantTablesController::class, 'index']);
+    Route::get('/restaurants/{id}', [RestaurantTablesController::class, 'get_restaurant_tables'])->middleware('auth:sanctum,restaurant_portal');
     Route::post('/', [RestaurantTablesController::class, 'store'])->middleware('auth:sanctum,restaurant_portal');
-    Route::delete('/{id}', [RestaurantTablesController::class, 'destroy']);
+    Route::delete('/{id}', [RestaurantTablesController::class, 'destroy'])->middleware('auth:sanctum,restaurant_portal');
     Route::put('/{id}/status', [RestaurantTablesController::class, 'updateStatus']);
 });
 
