@@ -71,7 +71,7 @@ class FoodDishesController extends Controller
             ], 422); // Use 422 for validation errors
         }
 
-        $imagePath = null;
+        $imageName = null;
         if ($request->hasFile('image')) {
             // Use Storage facade for better flexibility
             $image = $request->file('image');
@@ -116,9 +116,9 @@ class FoodDishesController extends Controller
             Log::error("Error creating food dish: " . $e->getMessage());
 
             // Delete uploaded image if creation failed
-            if ($imagePath && Storage::exists(str_replace('storage/', 'public/', $imagePath))) {
-                Storage::delete(str_replace('storage/', 'public/', $imagePath));
-            }
+            // if ($imagePath && Storage::exists(str_replace('storage/', 'public/', $imagePath))) {
+            //     Storage::delete(str_replace('storage/', 'public/', $imagePath));
+            // }
 
             return response()->json([
                 'message' => 'Failed to create food dish',
