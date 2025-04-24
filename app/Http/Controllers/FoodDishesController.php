@@ -30,6 +30,17 @@ class FoodDishesController extends Controller
         ]);
     }
 
+    public function get_one(Request $request, $id)
+    {
+        $food_dish = FoodDishes::with('variations', 'variety', 'restaurant')
+            ->where('id', $id)
+            ->first();
+
+        return response()->json([
+            'data' => $food_dish
+        ]);
+    }
+
     /**
      * Display dishes for a specific food variety, including their variations.
      */

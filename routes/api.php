@@ -33,6 +33,7 @@ Route::prefix('food-varieties')->group(function() {
 
 Route::prefix('food-dishes')->group(function() {
     Route::get('/restaurants/{id}', [FoodDishesController::class, 'index']);
+    Route::get('/{id}', [FoodDishesController::class, 'get_one']);
     Route::post('/', [FoodDishesController::class, 'store']);
     Route::delete('/{id}' , [FoodDishesController::class, 'destroy']);
     Route::put('/{id}' , [FoodDishesController::class, 'update']);
