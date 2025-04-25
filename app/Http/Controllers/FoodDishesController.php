@@ -68,7 +68,7 @@ class FoodDishesController extends Controller
         }
 
         $food_dishes = FoodDishes::with(['variations', 'extras', 'variety']) // Load extras
-            ->where('food_variety_id', $variety_id)
+            ->where('food_varieties_id', $variety_id)
             // Optional: ->where('restaurants_id', $variety->restaurants_id) // Add if needed
             ->latest()
             ->get();
@@ -86,7 +86,7 @@ class FoodDishesController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:5000',
-            'food_variety_id' => 'required|exists:food_varieties,id',
+            'food_varieties_id' => 'required|exists:food_varieties,id',
             'restaurants_id' => 'required|exists:restaurants,id', // Ensure table/column names match
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048', // Added webp
             // Variations Validation
@@ -127,7 +127,7 @@ class FoodDishesController extends Controller
                 'name' => $request->name,
                 'description' => $request->description,
                 'image' => $imagePath, // Store the relative path
-                'food_variety_id' => $request->food_variety_id,
+                'food_varieties_id' => $request->food_varieties_id,
                 'restaurants_id' => $request->restaurants_id, // Use correct column name
             ]);
 
@@ -190,7 +190,7 @@ class FoodDishesController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string|max:5000',
-            'food_variety_id' => 'sometimes|required|exists:food_varieties,id',
+            'food_varieties_id' => 'sometimes|required|exists:food_varieties,id',
             // No 'restaurants_id' update usually
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048', // Allow image update
              // Use sometimes validation for arrays on update
