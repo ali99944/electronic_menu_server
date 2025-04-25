@@ -30,4 +30,10 @@ class FoodDishes extends Model
         return $this->hasMany(DishVariation::class);
     }
 
+    // --- NEW: Relationship to Extras ---
+    public function extras()
+    {
+        // Ensure foreign key matches your dish_extras table
+        return $this->hasMany(DishExtra::class, 'food_dishes_id');
+    }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Events\OrderCreatedEvent;
+use App\Http\Controllers\Api\V1\DishExtraController;
 use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ChangelogPointController;
@@ -126,3 +127,9 @@ Route::apiResource('features', FeatureController::class);
 Route::get('/settings', [SettingsController::class, 'index'])->name('api.settings.index');
 
 Route::patch('/order-items/{id}/status', [OrderItemController::class, 'updateStatus']);
+
+
+// --- NEW: Routes for managing extras ON a specific dish ---
+Route::post('/food-dishes/{dish}/extras', [DishExtraController::class, 'store']);
+Route::delete('/food-dishes/{dish}/extras/{extra}', [DishExtraController::class, 'destroy']);
+ // Optional: Route::put('/food-dishes/{dish}/extras/{extra}', [DishExtraController::class, 'update']);
