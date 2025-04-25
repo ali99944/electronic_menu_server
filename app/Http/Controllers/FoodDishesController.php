@@ -24,11 +24,11 @@ class FoodDishesController extends Controller
     /**
      * Display dishes for a specific restaurant, including variations and extras.
      */
-    public function index($restaurant_id) // Changed param name for convention
+    public function index($restaurants_id) // Changed param name for convention
     {
         // Eager load relationships
         $food_dishes = FoodDishes::with(['variations', 'extras', 'variety', 'restaurant']) // Load extras
-            ->where('restaurant_id', $restaurant_id) // Use correct column name
+            ->where('restaurants_id', $restaurants_id) // Use correct column name
             ->latest() // Order by latest first
             ->get();
 
@@ -69,7 +69,7 @@ class FoodDishesController extends Controller
 
         $food_dishes = FoodDishes::with(['variations', 'extras', 'variety']) // Load extras
             ->where('food_variety_id', $variety_id)
-            // Optional: ->where('restaurant_id', $variety->restaurant_id) // Add if needed
+            // Optional: ->where('restaurants_id', $variety->restaurants_id) // Add if needed
             ->latest()
             ->get();
 
@@ -87,7 +87,7 @@ class FoodDishesController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:5000',
             'food_variety_id' => 'required|exists:food_varieties,id',
-            'restaurant_id' => 'required|exists:restaurants,id', // Ensure table/column names match
+            'restaurants_id' => 'required|exists:restaurants,id', // Ensure table/column names match
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048', // Added webp
             // Variations Validation
             'variations' => 'required|array|min:1',
@@ -128,7 +128,7 @@ class FoodDishesController extends Controller
                 'description' => $request->description,
                 'image' => $imagePath, // Store the relative path
                 'food_variety_id' => $request->food_variety_id,
-                'restaurant_id' => $request->restaurant_id, // Use correct column name
+                'restaurants_id' => $request->restaurants_id, // Use correct column name
             ]);
 
             // Create variations
@@ -191,7 +191,7 @@ class FoodDishesController extends Controller
             'name' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string|max:5000',
             'food_variety_id' => 'sometimes|required|exists:food_varieties,id',
-            // No 'restaurant_id' update usually
+            // No 'restaurants_id' update usually
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048', // Allow image update
              // Use sometimes validation for arrays on update
             'variations' => 'sometimes|required|array|min:1',
