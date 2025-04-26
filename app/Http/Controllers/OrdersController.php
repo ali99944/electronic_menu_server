@@ -13,6 +13,7 @@ use App\Models\RestaurantSetting;
 use App\Models\RestaurantTables;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class OrdersController extends Controller
@@ -78,13 +79,18 @@ class OrdersController extends Controller
         ]);
 
         $cart_items->each(function (CartItems $cart_item) use ($order) {
-            OrderItem::create([
+            $order_item = OrderItem::create([
                 'name' => $cart_item->dish->name . ' - ' . $cart_item->selected_dish_variant_name,
                 'price' => $cart_item->selected_dish_variant_value,
                 'image' => $cart_item->dish->image,
                 'quantity' => $cart_item->quantity,
                 'orders_id' => $order->id
             ]);
+
+            $order_item->selected_extras()->attach($cart_item->selectedExtras()->pluck('id'));
+
+            DB::table('cart_item_dish_extra')->where('cart_items_id', $cart_item->id)->delete();
+
         });
 
         CartItems::where('session_code', $request->header('session_code'))->truncate();
