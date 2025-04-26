@@ -22,9 +22,6 @@ class CartItemsController extends Controller
 
     public function store(Request $request)
     {
-        return response()->json([
-            'test' => $request->input('selected_extras')
-        ], 500);
         $cartItem = CartItems::where('session_code', $request->header('session_code'))
             ->where('food_dishes_id', $request->food_dishes_id)
             ->where('session_code', $request->header('session_code'))
