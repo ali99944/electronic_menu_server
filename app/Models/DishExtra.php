@@ -38,7 +38,7 @@ class DishExtra extends Model
                 CartItems::class,
                 'cart_item_dish_extra',
                 'dish_extra_id',
-                'cart_item_id'
+                'cart_items_id'
             );
              // ->withPivot(...) if needed
     }

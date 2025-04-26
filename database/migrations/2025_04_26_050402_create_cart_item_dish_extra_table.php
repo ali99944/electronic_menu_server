@@ -17,7 +17,7 @@ return new class extends Migration
             // $table->id();
 
             // Foreign key to the cart item
-            $table->foreignId('cart_item_id')
+            $table->foreignId('cart_items_id')
                   ->constrained('cart_items') // Assumes your table is 'cart_items'
                   ->onDelete('cascade'); // If cart item is deleted, remove the link
 
@@ -33,7 +33,7 @@ return new class extends Migration
             // $table->decimal('price_at_addition', 8, 2)->nullable();
 
             // Ensure combination is unique for a cart item
-            $table->primary(['cart_item_id', 'dish_extra_id']);
+            $table->primary(['cart_items_id', 'dish_extra_id']);
 
             // No timestamps needed usually for a simple pivot
             // $table->timestamps();

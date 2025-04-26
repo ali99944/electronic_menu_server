@@ -26,7 +26,7 @@ class CartItems extends Model
         return $this->belongsToMany(
                 DishExtra::class,       // Related Model
                 'cart_item_dish_extra', // Pivot table name
-                'cart_item_id',         // Foreign key on pivot table for this model
+                'cart_items_id',         // Foreign key on pivot table for this model
                 'dish_extra_id'         // Foreign key on pivot table for the related model
             );
             // If you added extra pivot columns like 'quantity' or 'price_at_addition':
