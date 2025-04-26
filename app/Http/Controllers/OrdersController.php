@@ -87,13 +87,14 @@ class OrdersController extends Controller
                 'orders_id' => $order->id
             ]);
 
+            CartItems::where('id', $cart_item->id)->delete();
             $order_item->selected_extras()->attach($cart_item->selected_extras()->pluck('id'));
 
             DB::table('cart_item_dish_extra')->where('cart_items_id', $cart_item->id)->delete();
 
         });
 
-        CartItems::where('session_code', $request->header('session_code'))->truncate();
+        // CartItems::where('session_code', $request->header('session_code'))->truncate();
 
 
         event(new OrderCreatedEvent(
