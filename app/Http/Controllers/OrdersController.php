@@ -87,7 +87,7 @@ class OrdersController extends Controller
                 'orders_id' => $order->id
             ]);
 
-            $order_item->selected_extras()->attach($cart_item->selectedExtras()->pluck('id'));
+            $order_item->selected_extras()->attach($cart_item->selected_extras()->pluck('id'));
 
             DB::table('cart_item_dish_extra')->where('cart_items_id', $cart_item->id)->delete();
 
