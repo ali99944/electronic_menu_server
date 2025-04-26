@@ -41,7 +41,7 @@ class CartItemsController extends Controller
                 'selected_dish_variant_value' => $dish_variant->price
             ]);
 
-            foreach ($request->selecte_extras as $extra) {
+            foreach ($request->selected_extras as $extra) {
                 $cartItem->selectedExtras()->attach($extra);
             }
         }
