@@ -30,7 +30,7 @@ class CartItemsController extends Controller
         $dish_variant = DishVariation::where('id', $request->food_dish_variation_id)->first();
 
         if ($cartItem && $cartItem->selected_dish_variant_name == $dish_variant->name) {
-            $cartItem->quantity = $cartItem->quantity + 1;
+            $cartItem->quantity++;
             $cartItem->save();
         } else {
             $cartItem = CartItems::create([
@@ -40,6 +40,10 @@ class CartItemsController extends Controller
                 'selected_dish_variant_name' => $dish_variant->name,
                 'selected_dish_variant_value' => $dish_variant->price
             ]);
+
+            foreach ($request->selecte_extras as $extra) {
+                $cartItem->selectedExtras()->attach($extra);
+            }
         }
 
         return response()->json([
