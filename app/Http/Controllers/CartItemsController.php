@@ -22,6 +22,9 @@ class CartItemsController extends Controller
 
     public function store(Request $request)
     {
+        return response()->json([
+            'test' => $request->input('selected_extras')
+        ], 500);
         $cartItem = CartItems::where('session_code', $request->header('session_code'))
             ->where('food_dishes_id', $request->food_dishes_id)
             ->where('session_code', $request->header('session_code'))
@@ -41,8 +44,10 @@ class CartItemsController extends Controller
                 'selected_dish_variant_value' => $dish_variant->price
             ]);
 
-            foreach ($request->selected_extras as $extra) {
-                $cartItem->selectedExtras()->attach($extra);
+            if ($request->has('selected_extras')) {
+                foreach ($request->selected_extras as $extra) {
+                    $cartItem->selectedExtras()->attach($extra);
+                }
             }
         }
 
