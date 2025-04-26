@@ -25,6 +25,7 @@ class OrdersController extends Controller
         $orders = Orders::with('order_items')
             ->where('restaurants_id', $portal->restaurants_id)
             ->orderByDesc('created_at')
+            ->with('order_items.selected_extras')
             ->get();
 
         return response()->json([
