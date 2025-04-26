@@ -13,6 +13,7 @@ class CartItemsController extends Controller
     {
         $food_varities = CartItems::where('session_code', $request->header('session_code') )
             ->with('dish')
+            ->with('selected_extras')
             ->get();
 
         return response()->json([
@@ -43,7 +44,7 @@ class CartItemsController extends Controller
 
             if ($request->has('selected_extras')) {
                 foreach ($request->selected_extras as $extra) {
-                    $cartItem->selectedExtras()->attach($extra);
+                    $cartItem->selected_extras()->attach($extra);
                 }
             }
         }

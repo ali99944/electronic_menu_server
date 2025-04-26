@@ -21,7 +21,7 @@ class CartItems extends Model
 
     // --- NEW: Relationship to selected Dish Extras ---
     // Defines a many-to-many relationship via the pivot table
-    public function selectedExtras()
+    public function selected_extras()
     {
         return $this->belongsToMany(
                 DishExtra::class,       // Related Model
