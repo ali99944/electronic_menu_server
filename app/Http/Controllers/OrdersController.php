@@ -239,11 +239,15 @@ $data = [
     'primary_color' => '#A70000',
 ];
 
-Pdf::view('invoices.orbisq_professional', $data)
-    ->format('a4')
-    ->save(time() . 'invoice.pdf');
+$pdf_path =  time() . ' - invoice.pdf';
+        Pdf::view('invoices.orbisq_professional', $data)
+        ->format('a4')
+        ->save($pdf_path);
+
+        $order->invoice = $pdf_path;
 
         }
+
 
         return response()->json([
             'data' => $order

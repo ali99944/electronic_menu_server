@@ -210,9 +210,10 @@ class InvoiceController extends Controller
             abort(404, "Invoice template '$viewPath' not found.");
         }
 
+        $pdf_path =  time() . ' - invoice.pdf';
         Pdf::view('invoices.orbisq_professional', $data)
         ->format('a4')
-        ->save(time() . 'invoice.pdf');
+        ->save($pdf_path);
 
         return view($viewPath, $data);
     }
