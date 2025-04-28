@@ -17,6 +17,7 @@
         "laravel/tinker": "^2.10.1",
         "predis/predis": "^2.3",
         "pusher/pusher-php-server": "^7.2",
+        "spatie/laravel-pdf": "^1.5",
         "tymon/jwt-auth": "^2.2"
     },
     "require-dev": {
