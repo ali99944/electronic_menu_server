@@ -6,7 +6,8 @@ use Carbon\Carbon;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\View; // To check if view exists
+use Illuminate\Support\Facades\View;
+use Spatie\LaravelPdf\Facades\Pdf;// To check if view exists
 
 class InvoiceController extends Controller
 {
@@ -208,6 +209,10 @@ class InvoiceController extends Controller
         if (!View::exists($viewPath)) {
             abort(404, "Invoice template '$viewPath' not found.");
         }
+
+        Pdf::view('invoices.orbisq_professional', $data)
+        ->format('a4')
+        ->save(time() . 'invoice.pdf');
 
         return view($viewPath, $data);
     }
