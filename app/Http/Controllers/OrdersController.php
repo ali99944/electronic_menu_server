@@ -11,14 +11,10 @@ use App\Models\Orders;
 use App\Models\Restaurants;
 use App\Models\RestaurantSetting;
 use App\Models\RestaurantTables;
-use Carbon\Carbon;
-use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Spatie\LaravelPdf\Facades\Pdf;
 
 class OrdersController extends Controller
 {
@@ -146,108 +142,7 @@ class OrdersController extends Controller
 
         if($request->status == 'paid') {
             event(new FreeUpTableEvent($order->restaurant_table_number));
-// --- Dummy Data (Similar structure, maybe add more details) ---
-$restaurant = [
-    'name' => 'مطعم الذواقة الحديث',
-    'logo_url' => 'https://img.freepik.com/free-vector/detailed-chef-logo-template_23-2148987940.jpg?ga=GA1.1.1880227217.1744728103&semt=ais_hybrid&w=740', // Public path
-    'address_line1' => '123 شارع الأمير محمد بن عبدالعزيز',
-    'address_line2' => 'حي العليا، الرياض 11564',
-    'phone' => '+966 11 419 XXXX',
-    'tax_number' => '300123456700003', // VAT Number
-];
-
-$order = [
-    'id' => 1206,
-    'order_code' => 'ORD-' . sprintf('%05d', 1206),
-    'date' => now()->format('Y-m-d H:i:s'),
-    'type' => 'داخل مطعم',
-    'table_number' => null,
-    'status' => 'مكتمل',
-];
-
-$customer = [ // Example for delivery
-    'name' => 'خالد الأحمد',
-    'phone' => '+966 50 XXX XXXX',
-    'address' => 'حي النرجس، شارع الأمانة، مبنى 15، شقة 3، الرياض',
-];
-
-$items = [
-    // ... (same items as before or add more complexity) ...
-     [ 'id' => 1, 'dish_name' => 'ستيك ريب آي', 'variation_name' => 'ميديم ويل', 'quantity' => 1, 'unit_price' => 120.00, 'total_price' => 120.00, ],
-     [ 'id' => 2, 'dish_name' => 'بطاطس مقلية', 'variation_name' => null, 'quantity' => 1, 'unit_price' => 15.00, 'total_price' => 15.00, ],
-     [ 'id' => 3, 'dish_name' => 'عصير برتقال طازج', 'variation_name' => null, 'quantity' => 2, 'unit_price' => 18.00, 'total_price' => 36.00, ],
-     [ 'id' => 4, 'dish_name' => 'تشيز كيك فراولة', 'variation_name' => null, 'quantity' => 1, 'unit_price' => 35.00, 'total_price' => 35.00, ],
-];
-
-// Calculate Totals
-$subtotal = collect($items)->sum('total_price');
-$taxRate = 0.15;
-$taxAmount = $subtotal * $taxRate;
-$deliveryCharge = ($order['type'] == 'توصيل') ? 15.00 : 0.00; // Example delivery charge
-$discount = 0.00;
-$grandTotal = $subtotal + $taxAmount + $deliveryCharge - $discount;
-
-$totals = [
-    'subtotal' => $subtotal,
-    'tax_label' => 'ضريبة القيمة المضافة (15%)',
-    'tax_amount' => $taxAmount,
-    'delivery_charge' => $deliveryCharge,
-    'discount_label' => 'خصم',
-    'discount_amount' => $discount,
-    'grand_total' => $grandTotal,
-    'currency_icon' => $restaurant['currency_icon'] ?? 'جنيه', // Assume currency from restaurant
-];
-
-// --- Generate Simplified E-Invoice QR Code (ZATCA format - TLV) ---
-// IMPORTANT: This requires the `php-tlv` library if you want full ZATCA compliance.
-// For demonstration, we'll just encode basic info.
-// For full ZATCA compliance: composer require sabic/php-tlv
-$qrCodeString = $this->generateSimplifiedInvoiceQrCode(
-    $restaurant['name'],
-    $restaurant['tax_number'],
-    $order['date'],
-    $totals['grand_total'],
-    $totals['tax_amount']
-);
-
-$qrCodeImage = null;
-if ($qrCodeString) {
-     try {
-        $options = new QROptions([
-            'outputType'   => QRCode::OUTPUT_IMAGE_PNG,
-            'imageBase64'  => true, // Easier to embed directly in Blade
-            'eccLevel'     => QRCode::ECC_L,
-            'scale'        => 4, // Smaller scale for embedding
-            'quietZoneSize'=> 1,
-        ]);
-         $qrCodeImage = (new QRCode($options))->render($qrCodeString);
-     } catch (\Exception $e) {
-         logger()->error('QR Code generation failed: ' . $e->getMessage());
-         // Continue without QR code if generation fails
-     }
-}
-// --- End QR Code Generation ---
-
-
-$data = [
-    'restaurant' => $restaurant,
-    'order' => $order,
-    'customer' => $customer,
-    'items' => $items,
-    'totals' => $totals,
-    'qr_code_image' => $qrCodeImage, // Pass QR code image data URI
-    'primary_color' => '#A70000',
-];
-
-$pdf_path =  time() . ' - invoice.pdf';
-        Pdf::view('invoices.orbisq_professional', $data)
-        ->format('a4')
-        ->save($pdf_path);
-
-        $order->invoice = $pdf_path;
-
         }
-
 
         return response()->json([
             'data' => $order
@@ -261,29 +156,5 @@ $pdf_path =  time() . ' - invoice.pdf';
         return response()->json([
             'status' => true
         ]);
-    }
-
-    private function generateSimplifiedInvoiceQrCode(string $sellerName, string $vatNumber, string $timestamp, float $totalAmount, float $vatAmount): ?string
-    {
-        try {
-            // Function to convert string to TLV format (Tag, Length, Value) HEX
-            $toTlv = function(int $tag, string $value): string {
-                $valueBytes = mb_convert_encoding($value, 'UTF-8');
-                $len = strlen($valueBytes);
-                return sprintf('%02X%02X%s', $tag, $len, bin2hex($valueBytes));
-            };
-
-            $tlvString = $toTlv(1, $sellerName) .
-                         $toTlv(2, $vatNumber) .
-                         $toTlv(3, Carbon::parse($timestamp)->toIso8601String()) . // ISO8601 format timestamp
-                         $toTlv(4, number_format($totalAmount, 2, '.', '')) . // Format number with 2 decimals
-                         $toTlv(5, number_format($vatAmount, 2, '.', '')); // Format number with 2 decimals
-
-            return base64_encode(hex2bin($tlvString)); // Encode the hex string to binary then base64
-
-        } catch (\Exception $e) {
-            logger()->error('QR Code TLV generation failed: ' . $e->getMessage());
-            return null;
-        }
     }
 }
