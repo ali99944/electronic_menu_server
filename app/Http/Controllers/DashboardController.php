@@ -101,7 +101,7 @@ class DashboardController extends Controller
     {
         // Base Query for Orders in the period
         // TODO: Add ->where('shop_id', $shopId) to this query
-        $ordersQuery = Orders::query()->whereBetween('created_at', [$startDate, $endDate]);
+        $ordersQuery = Orders::query();
 
         // --- Calculate Raw Stats ---
         $totalOrders = $ordersQuery->count();
