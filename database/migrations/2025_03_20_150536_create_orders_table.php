@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('client_name');
             $table->string('client_location');
             $table->string('client_location_landmark');
-            $table->string('client_phone');
+            $table->string('client_phone'); 
             $table->enum('order_type', ['inside', 'delivery'])->default('delivery');
             $table->timestamps();
         });

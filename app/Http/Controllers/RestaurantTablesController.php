@@ -80,7 +80,7 @@ class RestaurantTablesController extends Controller
 
 
         // --- QR Code Generation & Image Manipulation ---
-        $finalImageResource = null; // Initialize resource variable
+        $finalImageResource = null;
         $qrImageResource = null;
 
         try {

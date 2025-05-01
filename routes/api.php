@@ -1,6 +1,7 @@
 <?php
 
 use App\Events\OrderCreatedEvent;
+use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\DishExtraController;
 use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\SettingsController;
@@ -133,3 +134,6 @@ Route::patch('/order-items/{id}/status', [OrderItemController::class, 'updateSta
 Route::post('/food-dishes/{dish}/extras', [DishExtraController::class, 'store']);
 Route::delete('/food-dishes/{dish}/extras/{extra}', [DishExtraController::class, 'destroy']);
  // Optional: Route::put('/food-dishes/{dish}/extras/{extra}', [DishExtraController::class, 'update']);
+
+
+ Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('auth:sanctum'); // Protect route
