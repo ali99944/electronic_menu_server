@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1; // Adjust namespace if needed
+namespace App\Http\Controllers; // Adjust namespace if needed
 
 use App\Http\Controllers\Controller;
 use App\Models\Orders;

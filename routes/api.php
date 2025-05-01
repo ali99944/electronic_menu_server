@@ -1,8 +1,8 @@
 <?php
 
 use App\Events\OrderCreatedEvent;
-use App\Http\Controllers\Api\V1\DashboardController;
-use App\Http\Controllers\Api\V1\DishExtraController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DishExtraController;
 use App\Http\Controllers\OrderItemController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ChangelogPointController;
