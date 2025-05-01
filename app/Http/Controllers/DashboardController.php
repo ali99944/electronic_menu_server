@@ -1,111 +1,81 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1; // Adjust namespace as needed
+namespace App\Http\Controllers\Api\V1; // Adjust namespace if needed
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
-use App\Models\OrderItem; // Assuming you have this model
 use App\Models\Orders;
-use App\Models\Shop; // Assuming Shop/Restaurant model
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon; // Use Illuminate Carbon for date manipulation
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB; // Use DB facade for aggregate queries
+use App\Models\Order; // Assuming Order model exists
+use App\Models\OrderItem; // Assuming OrderItem model exists
+use Carbon\Carbon; // For date manipulation
 
 class DashboardController extends Controller
 {
     /**
-     * Fetch dashboard data based on time period and optional date.
-     *
+     * Get dashboard statistics and chart data based on a time period.
      * @group Dashboard
-     * @queryParam period string Time period ('day', 'week', 'month', 'year'). Example: week
-     * @queryParam date string Specific date (YYYY-MM-DD) for 'day' period. Example: 2024-03-15
+     * @queryParam period string Time period ('day', 'week', 'month', 'year'). Defaults to 'week'. Example: month
+     * @queryParam date string Specific date for 'day' period (YYYY-MM-DD). Example: 2024-03-15
      * @responseFile status=200 scenario="Dashboard Data" storage/responses/dashboard.data.json
      */
     public function index(Request $request)
     {
         // TODO: Authorization - Ensure user can access dashboard for their shop
-        // Gate::authorize('viewDashboard', Shop::class); // Or specific permission
-        // $shopId = auth()->user()->shop_id; // Get shop ID for filtering
+        // Gate::authorize('viewDashboard', Shop::class); // Example Policy
+        // TODO: Get shop_id based on authenticated user
+        // $shopId = auth()->user()->shop_id;
 
-        $validator = Validator::make($request->all(), [
-            'period' => 'sometimes|in:day,week,month,year',
-            'date' => 'sometimes|required_if:period,day|date_format:Y-m-d',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $period = $request->input('period', 'week'); // Default to week
-        $date = $request->input('date');
+        $period = $request->query('period', 'week'); // Default to week
+        $date = $request->query('date'); // Specific date for 'day' period
 
         // --- Calculate Date Range ---
-        [$startDate, $endDate] = $this->calculateDateRange($period, $date);
-        // --- Calculate Previous Period Date Range ---
-        [$prevStartDate, $prevEndDate] = $this->calculateDateRange($period, $date, true);
+        $dateRange = $this->calculateDateRange($period, $date);
+        $startDate = $dateRange['start'];
+        $endDate = $dateRange['end'];
 
+        // --- Fetch & Calculate Stats ---
+        // TODO: Filter all queries below by shop_id
+        $stats = $this->calculateStats($startDate, $endDate);
 
-        // --- Fetch Data within Date Range (Add $shopId filter) ---
-        $baseQuery = Orders::whereBetween('created_at', [$startDate->startOfDay(), $endDate->endOfDay()]);
-                        // ->where('shop_id', $shopId); // Filter by shop
+        // --- Fetch & Format Chart Data ---
+        // TODO: Filter all queries below by shop_id
+        $charts = $this->generateChartData($period, $startDate, $endDate);
 
-        // --- Fetch Data for Previous Period ---
-        $prevBaseQuery = Orders::whereBetween('created_at', [$prevStartDate->startOfDay(), $prevEndDate->endOfDay()]);
-                           // ->where('shop_id', $shopId); // Filter by shop
-
-        // --- Calculate Statistics ---
-        // Current Period
-        $currentStats = $this->calculateStats($baseQuery);
-        // Previous Period (for comparison)
-        $previousStats = $this->calculateStats($prevBaseQuery);
-
-        // --- Format Stats with Change % ---
-        $stats = $this->formatStatsWithChange($currentStats, $previousStats);
-
-        // --- Prepare Chart Data ---
-        $charts = $this->prepareChartData($period, $startDate, $endDate); // Pass $shopId if needed
 
         // --- Combine Data ---
         $dashboardData = [
             'stats' => $stats,
             'charts' => $charts,
-            'filters' => [ // Optionally return the applied filters
+            'filters' => [ // Return current filters for context
                 'period' => $period,
-                'date' => $date,
-                'startDate' => $startDate->toDateString(),
-                'endDate' => $endDate->toDateString(),
-            ],
+                'start_date' => $startDate->toDateString(),
+                'end_date' => $endDate->toDateString(),
+            ]
         ];
 
         return response()->json(['data' => $dashboardData]);
     }
 
-    /**
-     * Calculate start and end dates based on period and optional date.
-     *
-     * @param string $period
-     * @param string|null $date
-     * @param bool $previous Get previous period instead
-     * @return array [Carbon $startDate, Carbon $endDate]
-     */
-    private function calculateDateRange(string $period, ?string $date, bool $previous = false): array
-    {
-        $targetDate = $date ? Carbon::parse($date) : Carbon::today();
+    // --- Helper Functions ---
 
-        if ($previous) {
-            switch ($period) {
-                case 'day':   $targetDate->subDay(); break;
-                case 'week':  $targetDate->subWeek(); break;
-                case 'month': $targetDate->subMonthNoOverflow(); break;
-                case 'year':  $targetDate->subYearNoOverflow(); break;
-            }
-        }
+    /**
+     * Calculate the start and end dates based on the period.
+     */
+    protected function calculateDateRange(string $period, ?string $date = null): array
+    {
+        $targetDate = $date ? Carbon::parse($date)->endOfDay() : now()->endOfDay(); // Use provided date or today
+        $startDate = now(); // Initialize
+        $endDate = $targetDate; // Default end date
 
         switch ($period) {
             case 'day':
                 $startDate = $targetDate->copy()->startOfDay();
-                $endDate = $targetDate->copy()->endOfDay();
+                break;
+            case 'week':
+                // Adjust locale/start of week if needed (e.g., Carbon::setLocale('ar'), startOfWeek(Carbon::SATURDAY))
+                $startDate = $targetDate->copy()->startOfWeek();
+                $endDate = $targetDate->copy()->endOfWeek();
                 break;
             case 'month':
                 $startDate = $targetDate->copy()->startOfMonth();
@@ -115,285 +85,256 @@ class DashboardController extends Controller
                 $startDate = $targetDate->copy()->startOfYear();
                 $endDate = $targetDate->copy()->endOfYear();
                 break;
-            case 'week':
-            default:
-                // Ensure week starts on your desired day (e.g., Saturday)
-                Carbon::setWeekStartsAt(Carbon::SATURDAY);
-                Carbon::setWeekEndsAt(Carbon::FRIDAY);
+            default: // Default to week
                 $startDate = $targetDate->copy()->startOfWeek();
-                $endDate = $targetDate->copy()->endOfWeek();
+                 $endDate = $targetDate->copy()->endOfWeek();
                 break;
         }
-        return [$startDate, $endDate];
+
+        return ['start' => $startDate, 'end' => $endDate];
     }
 
     /**
-     * Calculate key statistics from an Order query builder.
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return array
+     * Calculate summary statistics for the given date range.
      */
-    private function calculateStats(\Illuminate\Database\Eloquent\Builder $query): array
+    protected function calculateStats(Carbon $startDate, Carbon $endDate): array
     {
-         // Clone query to avoid modifying the original for different calculations
-        $totalOrders = $query->clone()->count();
-        $completedQuery = $query->clone()->where('status', 'completed'); // Only count completed for sales/revenue
+        // Base Query for Orders in the period
+        // TODO: Add ->where('shop_id', $shopId) to this query
+        $ordersQuery = Orders::query()->whereBetween('created_at', [$startDate, $endDate]);
 
-        // NOTE: 'cost_price' in your orders table seems like the *cost* to the restaurant,
-        // not the *selling price*. We need the actual sale value. This usually comes
-        // from summing order_items prices + tax - discount + delivery.
-        // Let's assume you have a `total_amount` or similar column on the `orders` table
-        // OR you need to join/sum `order_items`.
-        // For simplicity, let's **assume** an 'order_total' column exists on orders.
-        // **YOU WILL NEED TO ADJUST THIS BASED ON YOUR ACTUAL PRICE CALCULATION**
+        // --- Calculate Raw Stats ---
+        $totalOrders = $ordersQuery->count();
+        // Assuming 'cost_price' in orders table represents the GRAND TOTAL of the order after discounts/taxes etc.
+        // If not, you need to calculate it by summing order_items prices + tax - discounts etc.
+        $totalSales = $ordersQuery->sum('cost_price'); // Use the final price field
+        // Clone query to avoid modifying the original for different calculations
+        $deliveryOrdersCount = $ordersQuery->clone()->where('order_type', 'delivery')->count();
+        // $pickupOrdersCount = $ordersQuery->clone()->where('order_type', 'pickup')->count(); // Removed based on request
+        $dineInOrdersCount = $ordersQuery->clone()->where('order_type', 'inside')->count();
 
-        $netSales = $completedQuery->clone()->sum('order_total'); // ASSUMED COLUMN
-        // If summing items:
-        // $netSales = OrderItem::whereIn('order_id', $completedQuery->pluck('id'))->sum(DB::raw('price * quantity')); // Requires price on OrderItem
+        // Calculate Average Order Value (handle division by zero)
+        $averageOrderValue = $totalOrders > 0 ? $totalSales / $totalOrders : 0;
 
-        $netIncome = $completedQuery->clone()->sum(DB::raw('order_total - cost_price')); // Revenue = Total - Cost (Simplified)
+        // --- Calculate Net Sales & Income (Requires more data) ---
+        // Net Sales: Usually Total Sales - Discounts
+        // Net Income/Profit: Usually Net Sales - Cost of Goods Sold (COGS)
+        // These require fetching discount amounts and potentially item costs.
+        // For this example, we'll make assumptions or use placeholders.
 
-        $deliveryOrders = $query->clone()->where('order_type', 'delivery')->count();
-        // $pickupOrders = $query->clone()->where('order_type', 'pickup')->count(); // If you add pickup type
-        $dineInOrders = $query->clone()->where('order_type', 'inside')->count();
+        // Placeholder Calculation (Requires Discount/Cost data on Order or Items)
+        // Example: Fetch total discount applied within the period
+        // $totalDiscount = $ordersQuery->clone()->sum('discount_amount'); // Assuming discount_amount column exists
+        $totalDiscount = $totalSales * 0.05; // Dummy 5% discount average
 
-        // $totalDiscount = $completedQuery->clone()->sum('discount_amount'); // ASSUMED COLUMN
-        $totalRevenue = $netIncome; // Simplified alias for now
+        // Example: Fetch total cost of goods sold (COGS)
+        // $totalCOGS = OrderItem::query()
+        //      ->whereHas('order', fn($q) => $q->whereBetween('created_at', [$startDate, $endDate])) // Filter by order date
+        //      ->sum(DB::raw('quantity * cost_price')); // Assuming cost_price column exists on OrderItem
+        $totalCOGS = $totalSales * 0.35; // Dummy 35% COGS average
 
+        $netSales = $totalSales - $totalDiscount;
+        $netIncome = $netSales - $totalCOGS; // Simplified Profit
+
+
+        // --- TODO: Calculate Change vs Previous Period ---
+        // For change %, you need to fetch the same stats for the *previous* period
+        // e.g., if period is 'week', fetch for the week before $startDate
+        // $previousStartDate = $startDate->copy()->subWeek(); ... fetch stats ... calculate % diff
+
+
+        // --- Format Stats Array ---
         return [
-            'totalOrders' => $totalOrders,
-            'netSales' => (float) $netSales,
-            'netIncome' => (float) $netIncome,
-            'deliveryOrders' => $deliveryOrders,
-            // 'pickupOrders' => $pickupOrders,
-            'dineInOrders' => $dineInOrders,
-            // 'totalDiscount' => (float) $totalDiscount,
-            'totalRevenue' => (float) $totalRevenue, // Same as netIncome here
-             'avgOrderValue' => $totalOrders > 0 ? round($netSales / $totalOrders, 2) : 0,
+            'totalOrders' => ['label' => 'إجمالي الطلبات', 'value' => $totalOrders, /* 'change' => ... */ ],
+            'netSales' => ['label' => 'صافي المبيعات', 'value' => number_format($netSales, 2), 'unit' => 'ر.س', /* 'change' => ... */ ],
+            'netIncome' => ['label' => 'صافي الدخل (تقديري)', 'value' => number_format($netIncome, 2), 'unit' => 'ر.س', /* 'change' => ... */ ],
+            'deliveryOrders' => ['label' => 'طلبات التوصيل', 'value' => $deliveryOrdersCount, /* 'change' => ... */ ],
+            // 'pickupOrders' => ['label' => 'طلبات الاستلام', 'value' => $pickupOrdersCount, /* 'change' => ... */ ], // Removed
+            'dineInOrders' => ['label' => 'الطلبات المحلية', 'value' => $dineInOrdersCount, /* 'change' => ... */ ],
+            // 'totalDiscount' => ['label' => 'مبلغ الخصم', 'value' => number_format($totalDiscount, 2), 'unit' => 'ر.س'], // Removed based on request
+            'totalRevenue' => ['label' => 'مبلغ الأرباح (تقديري)', 'value' => number_format($netIncome, 2), 'unit' => 'ر.س'], // Often same as Net Income/Profit
+            'averageOrderValue' => ['label' => 'متوسط قيمة الطلب', 'value' => number_format($averageOrderValue, 2), 'unit' => 'ر.س', /* 'change' => ... */ ],
+            // 'newCustomers' => ['label' => 'عملاء جدد', 'value' => 'N/A' /* Calculate based on customer creation date */ ], // Removed based on request
         ];
     }
 
-     /**
-      * Format stats and calculate percentage change from previous period.
-      *
-      * @param array $currentStats
-      * @param array $previousStats
-      * @return array
-      */
-     private function formatStatsWithChange(array $currentStats, array $previousStats): array
-     {
-        $formatted = [];
-        $currencyIcon = 'ر.س'; // Get from config or restaurant setting
 
-         // Define labels and units for clarity
-         $statLabels = [
-             'totalOrders' => ['label' => 'إجمالي الطلبات', 'unit' => null, 'icon' => 'ShoppingCart'],
-             'netSales' => ['label' => 'صافي المبيعات', 'unit' => $currencyIcon, 'icon' => 'BarChartBig'],
-             'netIncome' => ['label' => 'صافي الدخل', 'unit' => $currencyIcon, 'icon' => 'HandCoins'], // Using netIncome as basis for Revenue stat too
-             'deliveryOrders' => ['label' => 'طلبات التوصيل', 'unit' => null, 'icon' => 'Truck'],
-             // 'pickupOrders' => ['label' => 'طلبات الاستلام', 'unit' => null, 'icon' => 'Package'],
-             'dineInOrders' => ['label' => 'الطلبات المحلية', 'unit' => null, 'icon' => 'UtensilsCrossed'],
-             // 'totalDiscount' => ['label' => 'مبلغ الخصم', 'unit' => $currencyIcon, 'icon' => 'Percent'],
-             'totalRevenue' => ['label' => 'مبلغ الأرباح', 'unit' => $currencyIcon, 'icon' => 'TrendingUp'], // Using netIncome as basis
-             'avgOrderValue' => ['label' => 'متوسط قيمة الطلب', 'unit' => $currencyIcon, 'icon' => 'DollarSign'],
-         ];
-
-
-         foreach ($statLabels as $key => $details) {
-             $currentValue = $currentStats[$key] ?? 0;
-             $previousValue = $previousStats[$key] ?? 0;
-             $change = null;
-
-             if ($previousValue > 0) {
-                 $change = (($currentValue - $previousValue) / $previousValue) * 100;
-             } elseif ($currentValue > 0) {
-                 $change = 100.0; // Indicate positive change if previous was 0
-             } // else change remains null if both are 0
-
-             $formatted[$key] = [
-                 'label' => $details['label'],
-                 'value' => $details['unit'] ? number_format($currentValue, 2) : $currentValue,
-                 'unit' => $details['unit'],
-                 'iconName' => $details['icon'], // Send icon name for frontend mapping
-                 'change' => $change !== null ? round($change, 1) : null,
-             ];
-         }
-         return $formatted;
-     }
-
-     /**
-      * Prepare data suitable for chart rendering based on period.
-      *
-      * @param string $period
-      * @param \Illuminate\Support\Carbon $startDate
-      * @param \Illuminate\Support\Carbon $endDate
-      * @param int|null $shopId // TODO: Add shopId filter
-      * @return array
-      */
-     private function prepareChartData(string $period, Carbon $startDate, Carbon $endDate, ?int $shopId = null): array
-     {
-         // Base query for completed orders within the range
-          $query = Orders::query()
-              ->where('status', 'completed')
-              // ->where('shop_id', $shopId) // TODO: Add shop filter
-              ->whereBetween('created_at', [$startDate->startOfDay(), $endDate->endOfDay()]);
-
-         $dateFormat = '';
-         $groupBy = '';
-         $selectRaw = '';
-         $periodLabelPrefix = '';
-         $orderBy = 'period_start';
-
-         switch ($period) {
-             case 'day':
-                // Group by hour
-                $dateFormat = '%H:00'; // Hour format (00:00, 01:00...)
-                $groupBy = DB::raw("DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00')");
-                $selectRaw = DB::raw("DATE_FORMAT(created_at, '$dateFormat') as name");
-                $periodLabelPrefix = ''; // Label will be like '09:00'
-                break;
-            case 'week':
-                 // Group by day of week (e.g., Sat, Sun...)
-                 $dateFormat = '%Y-%m-%d'; // Group by full date
-                 $groupBy = DB::raw("DATE(created_at)");
-                 // Use database functions for day name - Locale dependent!
-                 // Example for MySQL with Arabic locale set: DAYNAME(created_at) or DATE_FORMAT(created_at, '%W')
-                 // Safer cross-db approach might be day number or formatting in PHP later
-                 $selectRaw = DB::raw("DATE_FORMAT(created_at, '%w') as day_num, DATE_FORMAT(created_at, '%a') as name"); // %w=0 for Sunday, %a=Sun
-                 $orderBy = 'day_num';
-                 // $periodLabelPrefix = ''; // We'll use the name like 'Sat'
-                 break;
-            case 'month':
-                 // Group by week number within the month
-                 $dateFormat = '%Y-%u'; // Year and Week number (ISO 8601)
-                 $groupBy = DB::raw("DATE_FORMAT(created_at, '$dateFormat')");
-                 // Use WEEK function or similar depending on DB
-                 $selectRaw = DB::raw("WEEK(created_at, 1) as week_num, DATE_FORMAT(created_at, '$dateFormat') as name"); // Mode 1 = Week starts Monday
-                 $orderBy = 'week_num';
-                 $periodLabelPrefix = 'أسبوع ';
-                 break;
-            case 'year':
-                 // Group by month
-                 $dateFormat = '%Y-%m'; // Year and Month number
-                 $groupBy = DB::raw("DATE_FORMAT(created_at, '$dateFormat')");
-                 // Use database functions for month name - Locale dependent!
-                 // Example for MySQL with Arabic: DATE_FORMAT(created_at, '%b') or MONTHNAME(created_at)
-                 $selectRaw = DB::raw("DATE_FORMAT(created_at, '%Y-%m') as name, MONTH(created_at) as month_num");
-                 $orderBy = 'month_num';
-                 // $periodLabelPrefix = ''; // Month names are better fetched/mapped
-                 break;
-            default:
-                return []; // Should not happen with validation
-         }
-
-        // --- Generate Chart Data ---
-         $selectFields = [
-             $selectRaw,
-             DB::raw('COUNT(*) as totalOrders'),
-             DB::raw('SUM(order_total) as netSales'), // ASSUMED COLUMN - ADJUST
-             DB::raw('SUM(order_total - cost_price) as netIncome'), // ASSUMED COLUMNS - ADJUST
-             DB::raw('SUM(CASE WHEN order_type = "delivery" THEN 1 ELSE 0 END) as deliveryOrders'),
-             // DB::raw('SUM(CASE WHEN order_type = "pickup" THEN 1 ELSE 0 END) as pickupOrders'),
-             DB::raw('SUM(CASE WHEN order_type = "inside" THEN 1 ELSE 0 END) as dineInOrders'),
-              // DB::raw('SUM(discount_amount) as totalDiscount'), // ASSUMED COLUMN
-         ];
-
-         $results = $query->clone()
-                          ->select($selectFields)
-                          ->groupBy($groupBy)
-                          ->orderBy($orderBy)
-                          ->get()
-                          ->keyBy('name'); // Key by the period name (hour, day, week, month) for easy access
-
-
-         // --- Structure data for frontend charts ---
-         // Create a full range of periods (hours, days, weeks, months) to ensure gaps are filled with 0
-         $chartDataTemplate = $this->generatePeriodTemplate($period, $startDate, $endDate);
-
-         // Map results to the template
-          $mapToTemplate = function($dataKey) use ($results, $chartDataTemplate, $periodLabelPrefix, $period) {
-              return $chartDataTemplate->map(function ($templateItem) use ($results, $dataKey, $periodLabelPrefix, $period) {
-                  $result = $results->get($templateItem['raw_name']); // Get result for this period
-                  $value = $result ? (float) $result->$dataKey : 0; // Use 0 if no result for this period
-
-                  // Customize name display
-                  $name = $templateItem['display_name'];
-                   if ($period === 'month' && $periodLabelPrefix) {
-                       $name = $periodLabelPrefix . $templateItem['week_num']; // Display as 'أسبوع 1', 'أسبوع 2' etc.
-                   }
-
-                  return ['name' => $name, 'value' => $value];
-              })->values()->toArray(); // Convert back to simple array
-          };
-
-         $charts = [
-            'ordersTrend' => ['title' => 'الطلبات', 'data' => $mapToTemplate('totalOrders'), 'dataKey' => 'value', 'color' => '#6366F1'],
-            'salesTrend' => ['title' => 'صافي المبيعات (ر.س)', 'data' => $mapToTemplate('netSales'), 'dataKey' => 'value', 'color' => '#10B981'],
-            'incomeTrend' => ['title' => 'صافي الدخل (ر.س)', 'data' => $mapToTemplate('netIncome'), 'dataKey' => 'value', 'color' => '#F59E0B'],
-            'deliveryTrend' => ['title' => 'طلبات التوصيل', 'data' => $mapToTemplate('deliveryOrders'), 'dataKey' => 'value', 'color' => '#3B82F6'],
-            // 'pickupTrend' => ['title' => 'طلبات الاستلام', 'data' => $mapToTemplate('pickupOrders'), 'dataKey' => 'value', 'color' => '#8B5CF6'],
-            'dineInTrend' => ['title' => 'الطلبات المحلية', 'data' => $mapToTemplate('dineInOrders'), 'dataKey' => 'value', 'color' => '#EC4899'],
-            // 'discountTrend' => ['title' => 'مبلغ الخصم (ر.س)', 'data' => $mapToTemplate('totalDiscount'), 'dataKey' => 'value', 'color' => '#EF4444'],
-            'revenueTrend' => ['title' => 'مبلغ الأرباح (ر.س)', 'data' => $mapToTemplate('netIncome'), 'dataKey' => 'value', 'color' => '#0EA5E9'], // Using netIncome again for "revenue" chart
-         ];
-
-         return $charts;
-     }
-
-     /**
-     * Generate a template of periods (hours, days, weeks, months) within a date range.
-     * This ensures charts have data points for all periods, even if there were no orders.
+    /**
+     * Generate data formatted for the area charts.
      */
-     private function generatePeriodTemplate(string $period, Carbon $startDate, Carbon $endDate)
+     protected function generateChartData(string $period, Carbon $startDate, Carbon $endDate): array
      {
-         $template = collect();
-         $current = $startDate->copy();
-         $arabicDays = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-         $arabicMonths = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+        // Define grouping format and interval based on period
+        $groupByFormat = 'Y-m-d'; // Default for week/month
+        $dateInterval = '1 day';
+        $chartLabelFormat = 'D j'; // e.g., Sat 16 (Short day name, day number)
 
-
-         switch ($period) {
+        switch ($period) {
              case 'day':
-                 while ($current->lte($endDate)) {
-                     $hour = $current->format('H');
-                     $template->push(['raw_name' => $hour.':00', 'display_name' => $hour.':00']);
-                     $current->addHour();
-                 }
+                 $groupByFormat = 'Y-m-d H:00:00'; // Group by hour
+                 $dateInterval = '1 hour';
+                 $chartLabelFormat = 'ha'; // e.g., 3pm
                  break;
-             case 'week':
-                 while ($current->lte($endDate)) {
-                     $dayNum = $current->dayOfWeek; // 0 for Sunday
-                     $template->push(['raw_name' => $current->format('D'), 'display_name' => $arabicDays[$dayNum]]); // Using short English name for key, Arabic for display
-                     $current->addDay();
-                 }
+             case 'week': // Default handled below
+                $chartLabelFormat = 'D j'; // e.g., Sat 16
                  break;
-             case 'month':
-                  // Generate week numbers within the month
-                  $startWeek = $startDate->weekOfYear;
-                  $endWeek = $endDate->weekOfYear;
-                  // Handle year transition if month spans across year end
-                 if ($endWeek < $startWeek) $endWeek += $startDate->weeksInYear();
-                  for ($w = $startWeek; $w <= $endWeek; $w++) {
-                     // Key needs year + week for uniqueness across years if range spans years
-                      $yearOfWeek = ($w > $startDate->weeksInYear()) ? $startDate->year + 1 : $startDate->year;
-                      $weekNumInYear = ($w > $startDate->weeksInYear()) ? $w - $startDate->weeksInYear() : $w;
-                      $template->push([
-                          'raw_name' => $yearOfWeek . '-' . sprintf('%02d', $weekNumInYear), // ISO week format YYYY-WW
-                          'week_num' => $weekNumInYear, // For display label prefix
-                           'display_name' => 'Week ' . $weekNumInYear // Placeholder, label constructed in mapToTemplate
-                       ]);
-                   }
+             case 'month': // Group by week within the month
+                 $groupByFormat = 'Y-W'; // Group by Year-Week number
+                 $dateInterval = '1 week';
+                 $chartLabelFormat = 'W'; // e.g., W11 (Week 11)
                  break;
              case 'year':
-                 while ($current->lte($endDate)) {
-                     $monthNum = $current->month - 1; // 0-indexed
-                     $template->push(['raw_name' => $current->format('Y-m'), 'display_name' => $arabicMonths[$monthNum]]);
-                     $current->addMonthNoOverflow();
-                 }
+                 $groupByFormat = 'Y-m'; // Group by Year-Month
+                 $dateInterval = '1 month';
+                  $chartLabelFormat = 'M'; // e.g., Mar (Short month name)
                  break;
          }
 
-         return $template;
+         // --- Generate Full Date/Time Range ---
+         // Create a complete range of dates/hours/weeks/months for the period
+         // This ensures charts have points even for periods with zero activity
+         $dateRangePoints = [];
+         $currentDate = $startDate->copy();
+         while ($currentDate <= $endDate) {
+             $key = '';
+             $label = '';
+              switch ($period) {
+                 case 'day':
+                    $key = $currentDate->format('Y-m-d H:00:00');
+                     $label = $currentDate->isoFormat('ha'); // More reliable localized AM/PM
+                    break;
+                 case 'week':
+                    $key = $currentDate->format('Y-m-d');
+                     $label = $currentDate->isoFormat('ddd D'); // Localized short day + number
+                     break;
+                 case 'month':
+                     // Key by week number, label as 'Week X'
+                    $key = $currentDate->format('Y-W');
+                     $label = 'أ' . $currentDate->weekOfYear; // 'أ' for 'أسبوع' (Week)
+                     break;
+                 case 'year':
+                     $key = $currentDate->format('Y-m');
+                     $label = $currentDate->isoFormat('MMM'); // Localized short month name
+                     break;
+             }
+             $dateRangePoints[$key] = ['name' => $label, 'value' => 0]; // Initialize with value 0
+
+             // Increment based on interval
+             switch ($period) {
+                case 'day': $currentDate->addHour(); break;
+                case 'week': $currentDate->addDay(); break;
+                case 'month': $currentDate->addWeek(); break; // Increment by week for month view
+                case 'year': $currentDate->addMonth(); break;
+            }
+         }
+
+
+         // --- Fetch Aggregated Data ---
+         // TODO: Add ->where('shop_id', $shopId) to these queries
+
+         // Example: Orders Count Trend
+         $ordersData = Orders::query()
+             ->selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00') as hour_group,
+                           DATE_FORMAT(created_at, '%Y-%m-%d') as day_group,
+                           DATE_FORMAT(created_at, '%Y-%u') as week_group, -- Use %u for ISO week starting Monday
+                           DATE_FORMAT(created_at, '%Y-%m') as month_group,
+                           COUNT(id) as count")
+             ->whereBetween('created_at', [$startDate, $endDate])
+             ->groupBy(DB::raw($this->getGroupByClause($period))) // Use helper for group by clause
+             ->orderBy('created_at') // Order by date to ensure correct sequence
+             ->get()
+             ->keyBy($this->getGroupByDateKey($period)); // Key results by the group format
+
+        // Example: Sales Amount Trend (using order 'cost_price')
+        $salesData = Orders::query()
+             ->selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00') as hour_group,
+                           DATE_FORMAT(created_at, '%Y-%m-%d') as day_group,
+                           DATE_FORMAT(created_at, '%Y-%u') as week_group,
+                           DATE_FORMAT(created_at, '%Y-%m') as month_group,
+                           SUM(cost_price) as total")
+             ->whereBetween('created_at', [$startDate, $endDate])
+             ->groupBy(DB::raw($this->getGroupByClause($period)))
+              ->orderBy('created_at')
+             ->get()
+             ->keyBy($this->getGroupByDateKey($period));
+
+        // --- (Repeat similar queries for Net Income, Delivery Orders, Dine-in Orders, Revenue/Profit) ---
+         $deliveryOrdersData = Orders::query()
+             ->selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00') as hour_group, ..., COUNT(id) as count")
+             ->where('order_type', 'delivery')
+             ->whereBetween('created_at', [$startDate, $endDate])
+             ->groupBy(DB::raw($this->getGroupByClause($period)))
+             ->orderBy('created_at')
+             ->get()->keyBy($this->getGroupByDateKey($period));
+
+         $dineInOrdersData = Orders::query()
+             ->selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00') as hour_group, ..., COUNT(id) as count")
+             ->where('order_type', 'inside')
+             ->whereBetween('created_at', [$startDate, $endDate])
+             ->groupBy(DB::raw($this->getGroupByClause($period)))
+             ->orderBy('created_at')
+             ->get()->keyBy($this->getGroupByDateKey($period));
+
+         // Simplified Profit Trend (based on dummy calculation, replace with real COGS/Discount data)
+         $profitData = Orders::query()
+             ->selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00') as hour_group, ..., SUM(cost_price * 0.60) as total") // Assuming 60% profit margin for simplicity
+             ->whereBetween('created_at', [$startDate, $endDate])
+             ->groupBy(DB::raw($this->getGroupByClause($period)))
+             ->orderBy('created_at')
+             ->get()->keyBy($this->getGroupByDateKey($period));
+
+
+        // --- Merge fetched data with the full date range ---
+        $mergedOrders = $dateRangePoints;
+        $mergedSales = $dateRangePoints;
+        $mergedDelivery = $dateRangePoints;
+        $mergedDineIn = $dateRangePoints;
+        $mergedProfit = $dateRangePoints;
+
+        foreach ($dateRangePoints as $key => $point) {
+            if (isset($ordersData[$key])) $mergedOrders[$key]['value'] = $ordersData[$key]->count;
+            if (isset($salesData[$key])) $mergedSales[$key]['value'] = round($salesData[$key]->total, 2);
+            if (isset($deliveryOrdersData[$key])) $mergedDelivery[$key]['value'] = $deliveryOrdersData[$key]->count;
+            if (isset($dineInOrdersData[$key])) $mergedDineIn[$key]['value'] = $dineInOrdersData[$key]->count;
+             if (isset($profitData[$key])) $mergedProfit[$key]['value'] = round($profitData[$key]->total, 2);
+            // ... merge data for other charts ...
+        }
+
+        // --- Format for Frontend ---
+        return [
+            'ordersTrend' => ['title' => 'الطلبات', 'data' => array_values($mergedOrders), 'dataKey' => 'value', 'color' => '#6366F1'],
+            'salesTrend' => ['title' => 'صافي المبيعات (ر.س)', 'data' => array_values($mergedSales), 'dataKey' => 'value', 'color' => '#10B981'],
+            'incomeTrend' => ['title' => 'صافي الدخل (ر.س)', 'data' => [], 'dataKey' => 'value', 'color' => '#F59E0B'], // Placeholder - requires COGS
+            'deliveryTrend' => ['title' => 'طلبات التوصيل', 'data' => array_values($mergedDelivery), 'dataKey' => 'value', 'color' => '#3B82F6'],
+            // 'pickupTrend' => ['title' => 'طلبات الاستلام', 'data' => [], 'dataKey' => 'value', 'color' => '#8B5CF6'], // Removed
+            'dineInTrend' => ['title' => 'الطلبات المحلية', 'data' => array_values($mergedDineIn), 'dataKey' => 'value', 'color' => '#EC4899'],
+            // 'discountTrend' => ['title' => 'مبلغ الخصم (ر.س)', 'data' => [], 'dataKey' => 'value', 'color' => '#EF4444'], // Removed
+            'revenueTrend' => ['title' => 'مبلغ الأرباح (ر.س)', 'data' => array_values($mergedProfit), 'dataKey' => 'value', 'color' => '#0EA5E9'],
+        ];
+    }
+
+     /** Helper to get the correct date key based on period for keyBy() */
+     private function getGroupByDateKey(string $period): string
+     {
+         switch($period) {
+             case 'day': return 'hour_group';
+             case 'week': return 'day_group';
+             case 'month': return 'week_group';
+             case 'year': return 'month_group';
+             default: return 'day_group';
+         }
+     }
+
+     /** Helper to get the correct GROUP BY clause */
+      private function getGroupByClause(string $period): string
+      {
+         switch($period) {
+             case 'day': return 'hour_group';
+             case 'week': return 'day_group';
+             case 'month': return 'week_group';
+             case 'year': return 'month_group';
+             default: return 'day_group';
+         }
      }
 
 }
