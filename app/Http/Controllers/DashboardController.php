@@ -164,100 +164,175 @@ class DashboardController extends Controller
      */
     protected function generateChartData(string $period, Carbon $startDate, Carbon $endDate): array
     {
-       // ... (date range and format setup) ...
-
-        // --- Fetch Aggregated Data ---
+        // --- Determine Grouping Format and Label ---
         $groupByClause = $this->getGroupByClause($period);
-        $groupByDateKey = $this->getGroupByDateKey($period);
+        $dateSelectExpression = $this->getDateSelectExpression($period, $groupByClause); // Get the SELECT expression for the date group
+        $chartLabelFormat = ''; // We'll generate labels below
+
+        // --- Generate Full Date/Time Range (Keep this logic) ---
+        $dateRangePoints = [];
+        $currentDate = $startDate->copy();
+        while ($currentDate <= $endDate) {
+            $key = '';
+            $label = '';
+            switch ($period) {
+                case 'day':
+                    $key = $currentDate->format('Y-m-d H:00:00');
+                    $label = $currentDate->isoFormat('ha');
+                    break;
+                case 'week':
+                    $key = $currentDate->format('Y-m-d');
+                    $label = $currentDate->isoFormat('ddd D');
+                    break;
+                case 'month':
+                    $key = $currentDate->format('Y-W'); // Group by Year-Week
+                    $label = 'أ' . $currentDate->weekOfYear;
+                    break;
+                case 'year':
+                    $key = $currentDate->format('Y-m');
+                    $label = $currentDate->isoFormat('MMM');
+                    break;
+                default: // Default to week
+                    $key = $currentDate->format('Y-m-d');
+                    $label = $currentDate->isoFormat('ddd D');
+                    break;
+            }
+             // Ensure unique keys if week/month spans year boundary slightly differently than DATE_FORMAT
+             // This simple keying might need refinement for month/week grouping accuracy
+             $uniqueKey = $key;
+             if (!isset($dateRangePoints[$uniqueKey])) { // Avoid duplicates if loop logic causes overlap
+                $dateRangePoints[$uniqueKey] = ['name' => $label, 'value' => 0];
+             }
+
+
+            // Increment based on interval
+            switch ($period) {
+                case 'day': $currentDate->addHour(); break;
+                case 'week': $currentDate->addDay(); break;
+                case 'month': $currentDate->addWeek(); break;
+                case 'year': $currentDate->addMonth(); break;
+                default: $currentDate->addDay(); break;
+            }
+            // Safety break to prevent infinite loops if interval logic has issues
+             if(count($dateRangePoints) > 366 && $period !== 'day') break;
+             if(count($dateRangePoints) > 24*7 && $period === 'day') break; // Limit hourly points too
+        }
+
+
+        // --- Fetch Aggregated Data (Corrected SELECT) ---
+        // TODO: Add ->where('shop_id', $shopId) to these queries
 
         // Example: Orders Count Trend
-        $ordersData = Orders::query() // Use correct Model name 'Order'
-            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00') as hour_group,
-                          DATE_FORMAT(created_at, '%Y-%m-%d') as day_group,
-                          DATE_FORMAT(created_at, '%Y-%u') as week_group,
-                          DATE_FORMAT(created_at, '%Y-%m') as month_group,
-                          COUNT(id) as count")
+        $ordersData = Orders::query()
+            ->selectRaw("{$dateSelectExpression} as date_group, COUNT(id) as count") // Select ONLY the group alias and the count
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->groupBy(DB::raw($groupByClause))
-            // ->orderBy('created_at') // <-- REMOVE THIS or change
-            ->orderBy(DB::raw($groupByClause)) // <-- ORDER BY the grouping column
+            ->groupBy('date_group') // Group by the alias
+            ->orderBy('date_group') // Order by the alias
             ->get()
-            ->keyBy($groupByDateKey);
+            ->keyBy('date_group'); // Key results by the alias
 
-       // Example: Sales Amount Trend
-       $salesData = Orders::query() // Use correct Model name 'Order'
-            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00') as hour_group,
-                          DATE_FORMAT(created_at, '%Y-%m-%d') as day_group,
-                          DATE_FORMAT(created_at, '%Y-%u') as week_group,
-                          DATE_FORMAT(created_at, '%Y-%m') as month_group,
-                          SUM(cost_price) as total")
+        // Example: Sales Amount Trend
+        $salesData = Orders::query()
+            ->selectRaw("{$dateSelectExpression} as date_group, SUM(cost_price) as total") // Select ONLY the group alias and the sum
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->groupBy(DB::raw($groupByClause))
-            // ->orderBy('created_at') // <-- REMOVE THIS or change
-            ->orderBy(DB::raw($groupByClause)) // <-- ORDER BY the grouping column
+            ->groupBy('date_group')
+            ->orderBy('date_group')
             ->get()
-            ->keyBy($groupByDateKey);
+            ->keyBy('date_group');
 
-       // --- Repeat for Delivery, DineIn, Profit Data ---
-        $deliveryOrdersData = Orders::query() // Use correct Model name 'Order'
-            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00') as hour_group, ..., COUNT(id) as count")
+        // Example: Delivery Orders Trend
+        $deliveryOrdersData = Orders::query()
+            ->selectRaw("{$dateSelectExpression} as date_group, COUNT(id) as count")
             ->where('order_type', 'delivery')
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->groupBy(DB::raw($groupByClause))
-            // ->orderBy('created_at') // <-- REMOVE THIS or change
-            ->orderBy(DB::raw($groupByClause)) // <-- ORDER BY the grouping column
-            ->get()->keyBy($groupByDateKey);
+            ->groupBy('date_group')
+            ->orderBy('date_group')
+            ->get()->keyBy('date_group');
 
-        $dineInOrdersData = Orders::query() // Use correct Model name 'Order'
-            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00') as hour_group, ..., COUNT(id) as count")
-            ->where('order_type', 'inside')
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->groupBy(DB::raw($groupByClause))
-            // ->orderBy('created_at') // <-- REMOVE THIS or change
-            ->orderBy(DB::raw($groupByClause)) // <-- ORDER BY the grouping column
-            ->get()->keyBy($groupByDateKey);
+        // Example: Dine-in Orders Trend
+        $dineInOrdersData = Orders::query()
+             ->selectRaw("{$dateSelectExpression} as date_group, COUNT(id) as count")
+             ->where('order_type', 'inside')
+             ->whereBetween('created_at', [$startDate, $endDate])
+             ->groupBy('date_group')
+             ->orderBy('date_group')
+             ->get()->keyBy('date_group');
 
-        // Simplified Profit Trend
-        $profitData = Orders::query() // Use correct Model name 'Order'
-            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00') as hour_group, ..., SUM(cost_price * 0.60) as total")
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->groupBy(DB::raw($groupByClause))
-            // ->orderBy('created_at') // <-- REMOVE THIS or change
-            ->orderBy(DB::raw($groupByClause)) // <-- ORDER BY the grouping column
-            ->get()->keyBy($groupByDateKey);
+        // Example: Simplified Profit Trend
+        $profitData = Orders::query()
+             ->selectRaw("{$dateSelectExpression} as date_group, SUM(cost_price * 0.60) as total") // Placeholder calculation
+             ->whereBetween('created_at', [$startDate, $endDate])
+             ->groupBy('date_group')
+             ->orderBy('date_group')
+             ->get()->keyBy('date_group');
 
 
-       // ... (Merge fetched data logic remains the same) ...
+        // --- Merge fetched data with the full date range ---
+        $mergedOrders = $dateRangePoints;
+        $mergedSales = $dateRangePoints;
+        $mergedDelivery = $dateRangePoints;
+        $mergedDineIn = $dateRangePoints;
+        $mergedProfit = $dateRangePoints;
 
-       // ... (Return formatted charts array) ...
-       return [
-            // ... chart data ...
-       ];
-   }
+        // Loop through the fetched data and update the corresponding point in the full range
+        foreach ($ordersData as $key => $data) { if(isset($mergedOrders[$key])) $mergedOrders[$key]['value'] = $data->count; }
+        foreach ($salesData as $key => $data) { if(isset($mergedSales[$key])) $mergedSales[$key]['value'] = round($data->total, 2); }
+        foreach ($deliveryOrdersData as $key => $data) { if(isset($mergedDelivery[$key])) $mergedDelivery[$key]['value'] = $data->count; }
+        foreach ($dineInOrdersData as $key => $data) { if(isset($mergedDineIn[$key])) $mergedDineIn[$key]['value'] = $data->count; }
+        foreach ($profitData as $key => $data) { if(isset($mergedProfit[$key])) $mergedProfit[$key]['value'] = round($data->total, 2); }
+        // ... merge data for other charts ...
+
+
+        // --- Format for Frontend ---
+        return [
+            'ordersTrend' => ['title' => 'الطلبات', 'data' => array_values($mergedOrders), 'dataKey' => 'value', 'color' => '#6366F1'],
+            'salesTrend' => ['title' => 'صافي المبيعات (ر.س)', 'data' => array_values($mergedSales), 'dataKey' => 'value', 'color' => '#10B981'],
+            // 'incomeTrend' => ['title' => 'صافي الدخل (ر.س)', 'data' => [], 'dataKey' => 'value', 'color' => '#F59E0B'], // Removed based on previous request
+            'deliveryTrend' => ['title' => 'طلبات التوصيل', 'data' => array_values($mergedDelivery), 'dataKey' => 'value', 'color' => '#3B82F6'],
+            'dineInTrend' => ['title' => 'الطلبات المحلية', 'data' => array_values($mergedDineIn), 'dataKey' => 'value', 'color' => '#EC4899'],
+            'revenueTrend' => ['title' => 'مبلغ الأرباح (ر.س)', 'data' => array_values($mergedProfit), 'dataKey' => 'value', 'color' => '#0EA5E9'],
+             // Removed discount, pickup trends based on previous request
+        ];
+    }
+
+    /** Helper to get the correct SQL expression for date grouping */
+    private function getDateSelectExpression(string $period, string $alias = 'date_group'): string
+    {
+        return match ($period) {
+            'day' => "DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00')",
+            'week' => "DATE_FORMAT(created_at, '%Y-%m-%d')",
+            'month' => "DATE_FORMAT(created_at, '%Y-%u')", // ISO week number
+            'year' => "DATE_FORMAT(created_at, '%Y-%m')",
+            default => "DATE_FORMAT(created_at, '%Y-%m-%d')", // Default week (daily)
+        };
+    }
+
+    /** Helper to get the correct GROUP BY clause */
+     private function getGroupByClause(string $period): string
+     {
+         // Group by the same expression used in SELECT
+         return $this->getDateSelectExpression($period);
+     }
+
+     /** Helper to get the correct date key based on period for keyBy()
+      *  This needs to match the *format* generated by getDateSelectExpression
+      */
+     private function getGroupByDateKey(string $period): string
+     {
+          return match ($period) {
+             'day' => 'hour_group', // Need to ensure alias matches if using raw select
+             'week' => 'day_group',
+             'month' => 'week_group',
+             'year' => 'month_group',
+             default => 'day_group',
+         };
+         // NOTE: It's often simpler and more robust to use the 'date_group' alias consistently
+         // return 'date_group'; // If all selectRaw use "as date_group"
+     }
    // ... other helper methods ...
 
      /** Helper to get the correct date key based on period for keyBy() */
-     private function getGroupByDateKey(string $period): string
-     {
-         switch($period) {
-             case 'day': return 'hour_group';
-             case 'week': return 'day_group';
-             case 'month': return 'week_group';
-             case 'year': return 'month_group';
-             default: return 'day_group';
-         }
-     }
 
-     /** Helper to get the correct GROUP BY clause */
-      private function getGroupByClause(string $period): string
-      {
-         switch($period) {
-             case 'day': return 'hour_group';
-             case 'week': return 'day_group';
-             case 'month': return 'week_group';
-             case 'year': return 'month_group';
-             default: return 'day_group';
-         }
-     }
+
 
 }
