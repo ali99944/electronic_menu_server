@@ -299,11 +299,11 @@ class DashboardController extends Controller
     private function getDateSelectExpression(string $period, string $alias = 'date_group'): string
     {
         return match ($period) {
-            'day' => "DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00') as {$alias}",
-            'week' => "DATE_FORMAT(created_at, '%Y-%m-%d') as {$alias}",
-            'month' => "DATE_FORMAT(created_at, '%Y-%u') as {$alias}", // ISO week number
-            'year' => "DATE_FORMAT(created_at, '%Y-%m') as {$alias}",
-            default => "DATE_FORMAT(created_at, '%Y-%m-%d') as {$alias}", // Default week (daily)
+            'day' => "DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00')",
+            'week' => "DATE_FORMAT(created_at, '%Y-%m-%d')",
+            'month' => "DATE_FORMAT(created_at, '%Y-%u')", // ISO week number
+            'year' => "DATE_FORMAT(created_at, '%Y-%m')",
+            default => "DATE_FORMAT(created_at, '%Y-%m-%d')", // Default week (daily)
         };
     }
 
