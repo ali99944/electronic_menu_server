@@ -14,7 +14,7 @@ return new class extends Migration
     {
         Schema::create('restaurant_tables', function (Blueprint $table) {
             $table->id();
-            $table->integer("table_number")->unique();
+            $table->integer("table_number");
             $table->enum('status', ['reserved', 'busy', 'free'])->default('free');
             $table->timestamps();
         });
