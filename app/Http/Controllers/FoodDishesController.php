@@ -212,6 +212,7 @@ class FoodDishesController extends Controller
             $oldImagePath = $dish->image;
             $newImagePath = $oldImagePath; // Keep old path unless new image uploaded
 
+
             // --- Handle Image Update ---
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
@@ -225,6 +226,8 @@ class FoodDishesController extends Controller
                  } else {
                      throw new \Exception("Failed to move updated dish image.");
                  }
+            }else {
+                    $dish->image = null;
             }
 
             // --- Update Main Dish Details (including potential new image path) ---
