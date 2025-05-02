@@ -36,7 +36,7 @@ class DashboardController extends Controller
 
         // --- Fetch & Calculate Stats ---
         // TODO: Filter all queries below by shop_id
-        $stats = $this->calculateStats($startDate, $endDate);
+        $stats = $this->calculateStats($startDate, $endDate, $request->user()->restaurants_id);
 
         // --- Fetch & Format Chart Data ---
         // TODO: Filter all queries below by shop_id
@@ -97,11 +97,11 @@ class DashboardController extends Controller
     /**
      * Calculate summary statistics for the given date range.
      */
-    protected function calculateStats(Carbon $startDate, Carbon $endDate): array
+    protected function calculateStats(Carbon $startDate, Carbon $endDate, $restaurant_id): array
     {
         // Base Query for Orders in the period
         // TODO: Add ->where('shop_id', $shopId) to this query
-        $ordersQuery = Orders::query();
+        $ordersQuery = Orders::where('restaurants_id', $restaurant_id);
 
         // --- Calculate Raw Stats ---
         $totalOrders = $ordersQuery->count();
