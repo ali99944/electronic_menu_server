@@ -39,7 +39,7 @@ class CartItemsController extends Controller
                 'session_code' => $request->header('session_code'),
                 'food_dishes_id' => $request->food_dishes_id,
                 'selected_dish_variant_name' => $dish_variant->name,
-                'selected_dish_variant_value' => $dish_variant->id
+                'selected_dish_variant_value' => $dish_variant->price
             ]);
 
             if ($request->has('selected_extras')) {
