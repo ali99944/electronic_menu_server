@@ -40,7 +40,7 @@ class DashboardController extends Controller
 
         // --- Fetch & Format Chart Data ---
         // TODO: Filter all queries below by shop_id
-        $charts = $this->generateChartData($period, $startDate, $endDate);
+        $charts = $this->generateChartData($period, $startDate, $endDate, $request->user()->restaurants_id);
 
 
         // --- Combine Data ---
@@ -162,7 +162,7 @@ class DashboardController extends Controller
     /**
      * Generate data formatted for the area charts.
      */
-    protected function generateChartData(string $period, Carbon $startDate, Carbon $endDate): array
+    protected function generateChartData(string $period, Carbon $startDate, Carbon $endDate, $restaurant_id): array
     {
         // --- Determine Grouping Format and Label ---
         $groupByClause = $this->getGroupByClause($period);
@@ -224,6 +224,7 @@ class DashboardController extends Controller
 
         // Example: Orders Count Trend
         $ordersData = Orders::query()
+            ->where('restaurant_id', $restaurant_id)
             ->selectRaw("{$dateSelectExpression} as date_group, COUNT(id) as count") // Select ONLY the group alias and the count
             ->whereBetween('created_at', [$startDate, $endDate])
             ->groupBy('date_group') // Group by the alias
@@ -233,6 +234,7 @@ class DashboardController extends Controller
 
         // Example: Sales Amount Trend
         $salesData = Orders::query()
+            ->where('restaurant_id', $restaurant_id)
             ->selectRaw("{$dateSelectExpression} as date_group, SUM(cost_price) as total") // Select ONLY the group alias and the sum
             ->whereBetween('created_at', [$startDate, $endDate])
             ->groupBy('date_group')
@@ -242,6 +244,7 @@ class DashboardController extends Controller
 
         // Example: Delivery Orders Trend
         $deliveryOrdersData = Orders::query()
+            ->where('restaurant_id', $restaurant_id)
             ->selectRaw("{$dateSelectExpression} as date_group, COUNT(id) as count")
             ->where('order_type', 'delivery')
             ->whereBetween('created_at', [$startDate, $endDate])
@@ -251,6 +254,7 @@ class DashboardController extends Controller
 
         // Example: Dine-in Orders Trend
         $dineInOrdersData = Orders::query()
+            ->where('restaurant_id', $restaurant_id)
              ->selectRaw("{$dateSelectExpression} as date_group, COUNT(id) as count")
              ->where('order_type', 'inside')
              ->whereBetween('created_at', [$startDate, $endDate])
@@ -260,6 +264,7 @@ class DashboardController extends Controller
 
         // Example: Simplified Profit Trend
         $profitData = Orders::query()
+            ->where('restaurant_id', $restaurant_id)
              ->selectRaw("{$dateSelectExpression} as date_group, SUM(cost_price * 0.60) as total") // Placeholder calculation
              ->whereBetween('created_at', [$startDate, $endDate])
              ->groupBy('date_group')
