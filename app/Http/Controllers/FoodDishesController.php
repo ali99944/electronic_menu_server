@@ -228,6 +228,7 @@ class FoodDishesController extends Controller
                  }
             }else {
                     $dish->image = null;
+                    $dish->save();
             }
 
             // --- Update Main Dish Details (including potential new image path) ---
