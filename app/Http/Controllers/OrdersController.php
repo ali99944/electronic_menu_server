@@ -9,6 +9,7 @@ use App\Models\CartItems;
 use App\Models\OrderItem;
 use App\Models\Orders;
 use App\Models\RestaurantSetting;
+use App\Models\RestaurantTables;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -102,6 +103,9 @@ class OrdersController extends Controller
                 ->first()
         ));
 
+
+        RestaurantTables::where('table_number', $order->restaurant_table_number)->update(['status' => 'busy']);
+
         return response()->json([
             'data' => $order
         ]);
@@ -140,6 +144,7 @@ class OrdersController extends Controller
 
         if($request->status == 'paid') {
             event(new FreeUpTableEvent($order->restaurant_table_number));
+            RestaurantTables::where('table_number', $order->restaurant_table_number)->update(['status' => 'free']);
         }
 
         return response()->json([
