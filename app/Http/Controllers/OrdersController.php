@@ -75,7 +75,7 @@ class OrdersController extends Controller
             'client_location_landmark' => $request->client_location_landmark,
             'client_phone' => $request->client_phone,
             'restaurants_id' => $request->query('restaurants_id'),
-            'order_type' => $restaurant_settings->has_delivery == true ? 'delivery' : 'inside'
+            'order_type' => 'inside'
         ]);
 
         $cart_items->each(function (CartItems $cart_item) use ($order) {
