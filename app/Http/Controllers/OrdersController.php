@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\FreeUpTableEvent;
 use App\Events\OrderCreatedEvent;
 use App\Events\OrderStatusChanged;
+use App\Events\TableUpdated;
 use App\Models\CartItems;
 use App\Models\OrderItem;
 use App\Models\Orders;
@@ -104,8 +105,12 @@ class OrdersController extends Controller
         ));
 
 
-        RestaurantTables::where('table_number', $order->restaurant_table_number)->update(['status' => 'busy']);
+        $table = RestaurantTables::where('table_number', $order->restaurant_table_number)->first();
 
+        $table->status = 'busy';
+        $table->save();
+
+        event(new TableUpdated());
         return response()->json([
             'data' => $order
         ]);
