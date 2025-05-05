@@ -107,8 +107,10 @@ class OrdersController extends Controller
 
         $table = RestaurantTables::where('table_number', $order->restaurant_table_number)->first();
 
-        $table->status = 'busy';
-        $table->save();
+        if($table) {
+            $table->status = 'busy';
+            $table->save();
+        }
 
         event(new TableUpdated());
         return response()->json([
