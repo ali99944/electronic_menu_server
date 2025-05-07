@@ -32,13 +32,13 @@ class RestaurantMenuStyleController extends Controller
                 --color-primary: {$styles->primary_color};
                 --color-primary-text: {$styles->primary_text_color};
 
-                --color-primary-banner-title: {$styles->banner_title_color}
-                --color-primary-banner-description: {$styles->banner_description_color}
+                --color-primary-banner-title: {$styles->banner_title_color};
+                --color-primary-banner-description: {$styles->banner_description_color};
 
-                --color-primary-header-bg: {$styles->header_bg_color}
-                --color-primary-header-text: {$styles->header_text_color}
+                --color-primary-header-bg: {$styles->header_bg_color};
+                --color-primary-header-text: {$styles->header_text_color};
 
-                --color-menu-background: {$styles->menu_background_color}
+                --color-menu-background: {$styles->menu_background_color};
 
                 font-family: 'alilato', sans-serif;
             }
